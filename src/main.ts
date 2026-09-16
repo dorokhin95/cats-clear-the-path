@@ -107,22 +107,25 @@ async function initApp(): Promise<void> {
   let levelSelect: LevelSelect | null = null;
   let collectionScreen: CollectionScreen | null = null;
   let catHouseScreen: CatHouseScreen | null = null;
+  let mainMenu: MainMenu | null = null;
   let lastLevelResult: LevelResult | null = null;
   const tutorialController = new TutorialController(uiLayer, playerProgress);
 
   const updateCoinsDisplay = () => {
     const el = document.getElementById('menuCoinBalance');
     if (el) el.textContent = `${playerProgress.getCoins()}`;
+    mainMenu?.updateProgress(playerProgress);
   };
 
   // 8. Функция загрузки уровня
   const loadGameLevel = (levelId: number) => {
     currentLevelId = levelId;
-    const loaded = LevelLoader.loadBoard(levelId);
+    const selectedSkin = playerProgress.getSelectedCat();
+    const loaded = LevelLoader.loadBoard(levelId, selectedSkin);
     if (!loaded) {
       console.warn(`[App] Уровень ${levelId} не найден, сброс на уровень 1`);
       currentLevelId = 1;
-      const first = LevelLoader.loadBoard(1);
+      const first = LevelLoader.loadBoard(1, selectedSkin);
       if (first) {
         game.loadBoard(first.board, 1, first.levelData);
         gameplayHUD.setLevel(1, true);
@@ -267,6 +270,8 @@ async function initApp(): Promise<void> {
       playerProgress.selectCat(skinId);
       SaveService.save(playerProgress);
       collectionScreen?.updateProgress(playerProgress);
+      catHouseScreen?.updateProgress(playerProgress);
+      mainMenu?.updateProgress(playerProgress);
     },
     onBuyCat: (skin) => {
       audioManager.playCoin();
@@ -274,6 +279,8 @@ async function initApp(): Promise<void> {
       if (success) {
         SaveService.save(playerProgress);
         collectionScreen?.updateProgress(playerProgress);
+        catHouseScreen?.updateProgress(playerProgress);
+        mainMenu?.updateProgress(playerProgress);
         updateCoinsDisplay();
       }
     },
@@ -415,7 +422,7 @@ async function initApp(): Promise<void> {
   pauseMenu.mount(uiLayer);
 
   // 16. Главное меню
-  const mainMenu = new MainMenu({
+  mainMenu = new MainMenu(playerProgress, {
     onPlay: () => {
       audioManager.init();
       audioManager.playClick();
@@ -442,6 +449,9 @@ async function initApp(): Promise<void> {
     onSettings: () => {
       audioManager.playClick();
       settingsMenu.open();
+    },
+    onPetMascot: () => {
+      audioManager.playCatEscape();
     }
   });
 

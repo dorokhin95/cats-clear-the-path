@@ -1,6 +1,7 @@
 import { IScreen } from './ScreenManager';
 import { PlayerProgress } from '../progression/PlayerProgress';
 import { CatCollection, SkinDefinition } from '../progression/CatCollection';
+import { CatRenderer } from '../rendering/CatRenderer';
 
 export interface CollectionCallbacks {
   onSelectCat: (skinId: string) => void;
@@ -86,7 +87,7 @@ export class CollectionScreen implements IScreen {
 
       card.innerHTML = `
         <div style="display: flex; align-items: center; gap: 14px;">
-          <div style="font-size: 38px; min-width: 48px; text-align: center;">${skin.icon}</div>
+          <div id="skinCanvasContainer_${skin.id}" style="width: 52px; height: 52px; min-width: 52px; border-radius: 14px; background: #FFF6EC; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.06); position: relative; overflow: hidden;"></div>
           <div style="display: flex; flex-direction: column; gap: 3px;">
             <div style="display: flex; align-items: center; gap: 8px;">
               <span style="font-weight: 700; font-size: 18px; color: var(--color-text-dark);">${skin.name}</span>
@@ -101,6 +102,18 @@ export class CollectionScreen implements IScreen {
         </div>
         <div id="btnContainer_${skin.id}"></div>
       `;
+
+      // Генерация наглядного превью котика на Canvas
+      const previewBox = card.querySelector(`#skinCanvasContainer_${skin.id}`);
+      if (previewBox) {
+        const canvas = document.createElement('canvas');
+        canvas.width = 52;
+        canvas.height = 52;
+        canvas.style.width = '52px';
+        canvas.style.height = '52px';
+        CatRenderer.renderPreviewToCanvas(canvas, skin.id);
+        previewBox.appendChild(canvas);
+      }
 
       const btnContainer = card.querySelector(`#btnContainer_${skin.id}`);
       if (btnContainer) {

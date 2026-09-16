@@ -6,6 +6,8 @@ export interface SkinPalette {
   stripes?: string;
   eyes: string;
   blush: string;
+  muzzle?: string;
+  patch?: string;
 }
 
 const PALETTES: Record<string, SkinPalette> = {
@@ -29,10 +31,44 @@ const PALETTES: Record<string, SkinPalette> = {
     blush: 'rgba(255, 120, 120, 0.25)'
   },
   shadow: {
-    body: '#424242',
-    earsInner: '#616161',
+    body: '#363636',
+    earsInner: '#505050',
     eyes: '#76D275',
     blush: 'rgba(255, 255, 255, 0.15)'
+  },
+  siamese: {
+    body: '#F5E6D3',
+    earsInner: '#3E2723',
+    muzzle: '#4E342E',
+    eyes: '#29B6F6',
+    blush: 'rgba(255, 120, 120, 0.2)'
+  },
+  calico: {
+    body: '#FFFFFF',
+    earsInner: '#FF8A8A',
+    patch: '#FF9800',
+    stripes: '#37474F',
+    eyes: '#66BB6A',
+    blush: 'rgba(255, 100, 100, 0.25)'
+  },
+  hat: {
+    body: '#FFB84D',
+    earsInner: '#FF8A8A',
+    stripes: '#E69B2A',
+    eyes: '#363636',
+    blush: 'rgba(255, 100, 100, 0.25)'
+  },
+  pirate: {
+    body: '#795548',
+    earsInner: '#4E342E',
+    eyes: '#FFCA28',
+    blush: 'rgba(0, 0, 0, 0.15)'
+  },
+  astronaut: {
+    body: '#E0E0E0',
+    earsInner: '#BDBDBD',
+    eyes: '#00E5FF',
+    blush: 'rgba(0, 229, 255, 0.2)'
   }
 };
 
@@ -90,7 +126,7 @@ export class CatRenderer {
     ctx.fill();
 
     // Поворот котика в зависимости от направления
-    this.drawBodyAndHead(ctx, baseRadius, palette, cat.direction, cat.isBlinking);
+    this.drawBodyAndHead(ctx, baseRadius, palette, cat.skin, cat.direction, cat.isBlinking);
 
     // Контрастный шеврон направления движения
     this.drawDirectionMarker(ctx, baseRadius, cat.direction);
@@ -141,6 +177,7 @@ export class CatRenderer {
     ctx: CanvasRenderingContext2D,
     radius: number,
     palette: SkinPalette,
+    skinId: string,
     direction: Direction,
     isBlinking: boolean
   ): void {
@@ -153,8 +190,141 @@ export class CatRenderer {
     ctx.arc(0, 0, radius, 0, Math.PI * 2);
     ctx.fill();
 
-    // 3. Мордочка (глаза, носик, щечки), смещенные в направлении взгляда
-    this.drawFace(ctx, radius, palette, direction, isBlinking);
+    // 3. Узоры и пятна скина (полоски, пятна трехцветки, сиамская мордочка)
+    this.drawPatterns(ctx, radius, palette, skinId, direction);
+
+    // 4. Мордочка (глаза, носик, щечки), смещенные в направлении взгляда
+    this.drawFace(ctx, radius, palette, skinId, direction, isBlinking);
+
+    // 5. Уникальные аксессуары (шляпа, пиратская треуголка, скафандр)
+    this.drawAccessories(ctx, radius, skinId, direction);
+  }
+
+  private static drawPatterns(
+    ctx: CanvasRenderingContext2D,
+    radius: number,
+    palette: SkinPalette,
+    skinId: string,
+    direction: Direction
+  ): void {
+    if (direction === 'up') return;
+
+    // Пятна трёхцветки (Calico)
+    if (skinId === 'calico') {
+      ctx.save();
+      // Рыжее пятно слева
+      ctx.fillStyle = '#FF9800';
+      ctx.beginPath();
+      ctx.arc(-radius * 0.45, -radius * 0.4, radius * 0.35, 0, Math.PI * 2);
+      ctx.fill();
+      // Темное пятно справа
+      ctx.fillStyle = '#37474F';
+      ctx.beginPath();
+      ctx.arc(radius * 0.5, -radius * 0.35, radius * 0.3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Сиамская темная маска (Siamese)
+    if (skinId === 'siamese') {
+      ctx.save();
+      ctx.fillStyle = palette.muzzle || '#4E342E';
+      ctx.beginPath();
+      let cx = 0;
+      let cy = radius * 0.1;
+      if (direction === 'left') cx = -radius * 0.25;
+      if (direction === 'right') cx = radius * 0.25;
+      ctx.ellipse(cx, cy, radius * 0.48, radius * 0.34, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Полоски на лобике для Рыжика
+    if (skinId === 'ginger') {
+      ctx.save();
+      ctx.strokeStyle = palette.stripes || '#E69B2A';
+      ctx.lineWidth = 2.5;
+      ctx.lineCap = 'round';
+      const cx = direction === 'left' ? -radius * 0.15 : direction === 'right' ? radius * 0.15 : 0;
+      ctx.beginPath();
+      ctx.moveTo(cx, -radius * 0.8);
+      ctx.lineTo(cx, -radius * 0.5);
+      ctx.moveTo(cx - 7, -radius * 0.75);
+      ctx.lineTo(cx - 5, -radius * 0.55);
+      ctx.moveTo(cx + 7, -radius * 0.75);
+      ctx.lineTo(cx + 5, -radius * 0.55);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  private static drawAccessories(
+    ctx: CanvasRenderingContext2D,
+    radius: number,
+    skinId: string,
+    _direction: Direction
+  ): void {
+    // 🎩 Кот в шляпе (Hat)
+    if (skinId === 'hat') {
+      ctx.save();
+      const hatY = -radius * 0.75;
+      const hatWidth = radius * 0.85;
+      const hatHeight = radius * 0.65;
+      // Поля шляпы
+      ctx.fillStyle = '#212121';
+      ctx.beginPath();
+      ctx.ellipse(0, hatY, hatWidth * 0.75, radius * 0.18, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Тулья шляпы
+      ctx.fillRect(-hatWidth * 0.4, hatY - hatHeight, hatWidth * 0.8, hatHeight);
+      ctx.beginPath();
+      ctx.ellipse(0, hatY - hatHeight, hatWidth * 0.4, radius * 0.12, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Красная лента
+      ctx.fillStyle = '#E53935';
+      ctx.fillRect(-hatWidth * 0.4, hatY - radius * 0.18, hatWidth * 0.8, radius * 0.16);
+      ctx.restore();
+    }
+
+    // 🏴‍☠️ Кот-пират (Pirate)
+    if (skinId === 'pirate') {
+      ctx.save();
+      // Пиратская треуголка
+      ctx.fillStyle = '#1A1A1A';
+      ctx.beginPath();
+      ctx.moveTo(-radius * 0.9, -radius * 0.6);
+      ctx.lineTo(0, -radius * 1.3);
+      ctx.lineTo(radius * 0.9, -radius * 0.6);
+      ctx.quadraticCurveTo(0, -radius * 0.45, -radius * 0.9, -radius * 0.6);
+      ctx.closePath();
+      ctx.fill();
+      // Золотой черепок/знак
+      ctx.fillStyle = '#FFD54F';
+      ctx.beginPath();
+      ctx.arc(0, -radius * 0.82, radius * 0.1, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // 🚀 Космонавт (Astronaut)
+    if (skinId === 'astronaut') {
+      ctx.save();
+      // Прозрачный купол шлема
+      ctx.strokeStyle = '#B0BEC5';
+      ctx.lineWidth = 3;
+      ctx.fillStyle = 'rgba(129, 212, 250, 0.22)';
+      ctx.beginPath();
+      ctx.arc(0, 0, radius * 1.15, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      // Блик на стекле
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+      ctx.lineWidth = 3.5;
+      ctx.beginPath();
+      ctx.arc(0, 0, radius * 0.95, -0.8 * Math.PI, -0.3 * Math.PI);
+      ctx.stroke();
+      ctx.restore();
+    }
   }
 
   private static drawEars(
@@ -223,6 +393,7 @@ export class CatRenderer {
     ctx: CanvasRenderingContext2D,
     radius: number,
     palette: SkinPalette,
+    skinId: string,
     direction: Direction,
     isBlinking: boolean
   ): void {
@@ -265,22 +436,49 @@ export class CatRenderer {
       ctx.arc(offsetX - radius * 0.3, offsetY - radius * 0.05, eyeRadius, 0.1 * Math.PI, 0.9 * Math.PI);
       ctx.stroke();
 
-      ctx.beginPath();
-      ctx.arc(offsetX + radius * 0.3, offsetY - radius * 0.05, eyeRadius, 0.1 * Math.PI, 0.9 * Math.PI);
-      ctx.stroke();
+      if (skinId !== 'pirate') {
+        ctx.beginPath();
+        ctx.arc(offsetX + radius * 0.3, offsetY - radius * 0.05, eyeRadius, 0.1 * Math.PI, 0.9 * Math.PI);
+        ctx.stroke();
+      }
     } else {
-      // Открытые глаза с белыми бликами
+      // Левый глаз
       ctx.beginPath();
       ctx.arc(offsetX - radius * 0.3, offsetY - radius * 0.05, eyeRadius, 0, Math.PI * 2);
-      ctx.arc(offsetX + radius * 0.3, offsetY - radius * 0.05, eyeRadius, 0, Math.PI * 2);
       ctx.fill();
 
-      // Блики
       ctx.fillStyle = '#FFFFFF';
       ctx.beginPath();
       ctx.arc(offsetX - radius * 0.3 - eyeRadius * 0.3, offsetY - radius * 0.05 - eyeRadius * 0.3, eyeRadius * 0.35, 0, Math.PI * 2);
-      ctx.arc(offsetX + radius * 0.3 - eyeRadius * 0.3, offsetY - radius * 0.05 - eyeRadius * 0.3, eyeRadius * 0.35, 0, Math.PI * 2);
       ctx.fill();
+
+      // Правый глаз (или повязка у пирата)
+      if (skinId === 'pirate') {
+        ctx.save();
+        // Ремешок повязки
+        ctx.strokeStyle = '#212121';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(offsetX - radius * 0.5, offsetY - radius * 0.4);
+        ctx.lineTo(offsetX + radius * 0.6, offsetY + radius * 0.2);
+        ctx.stroke();
+        // Сама повязка на правом глазу
+        ctx.fillStyle = '#212121';
+        ctx.beginPath();
+        ctx.ellipse(offsetX + radius * 0.3, offsetY - radius * 0.05, eyeRadius * 1.3, eyeRadius * 1.1, 0.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      } else {
+        ctx.fillStyle = palette.eyes;
+        ctx.beginPath();
+        ctx.arc(offsetX + radius * 0.3, offsetY - radius * 0.05, eyeRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.arc(offsetX + radius * 0.3 - eyeRadius * 0.3, offsetY - radius * 0.05 - eyeRadius * 0.3, eyeRadius * 0.35, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
 
     // Носик
@@ -320,5 +518,48 @@ export class CatRenderer {
     ctx.fillText('!', 0, 0);
 
     ctx.restore();
+  }
+
+  /**
+   * Отрисовывает превью котика на переданном контексте в заданных координатах
+   */
+  public static renderPreview(
+    ctx: CanvasRenderingContext2D,
+    skinId: string,
+    centerX: number,
+    centerY: number,
+    size: number
+  ): void {
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    const radius = size * 0.4;
+    const palette = PALETTES[skinId] || PALETTES.ginger;
+
+    // Мягкая тень под котиком
+    ctx.fillStyle = 'rgba(54, 54, 54, 0.12)';
+    ctx.beginPath();
+    ctx.ellipse(0, radius * 0.85, radius * 0.8, radius * 0.3, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    this.drawBodyAndHead(ctx, radius, palette, skinId, 'down', false);
+    ctx.restore();
+  }
+
+  /**
+   * Рисует котика прямо в Canvas элемент заданного размера
+   */
+  public static renderPreviewToCanvas(canvas: HTMLCanvasElement, skinId: string): void {
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const dpr = window.devicePixelRatio || 1;
+    const width = canvas.clientWidth || canvas.width || 64;
+    const height = canvas.clientHeight || canvas.height || 64;
+
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, width, height);
+
+    this.renderPreview(ctx, skinId, width / 2, height / 2, Math.min(width, height));
   }
 }

@@ -37,19 +37,24 @@ export class LevelLoader {
 
   /**
    * Преобразует данные уровня LevelData в рабочий экземпляр Board с котиками
+   * При передаче playerSkin первый котик уровня принимает скин выбранного игроком любимца!
    */
-  public static loadBoard(levelId: number): { board: Board; levelData: LevelData } | null {
+  public static loadBoard(levelId: number, playerSkin?: string): { board: Board; levelData: LevelData } | null {
     const data = this.getLevel(levelId);
     if (!data) return null;
 
     const board = new Board(data.width, data.height);
     for (const catData of data.cats) {
+      let skin = catData.skin || 'ginger';
+      if (playerSkin && catData.id === 1) {
+        skin = playerSkin;
+      }
       const cat = new Cat({
         id: catData.id,
         x: catData.x,
         y: catData.y,
         direction: catData.direction,
-        skin: catData.skin || 'ginger'
+        skin
       });
       board.addCat(cat);
     }

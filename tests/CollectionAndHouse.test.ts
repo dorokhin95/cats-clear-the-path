@@ -63,4 +63,69 @@ describe('CatCollection & CatHouse Progression', () => {
     expect(container.querySelector('#screen-cat-house')).not.toBeNull();
     expect(container.textContent).toContain('ДОМИК КОТИКОВ');
   });
+
+  it('купленные котики немедленно заселяются в CatHouseScreen и отображаются в комнате', () => {
+    const container = document.createElement('div');
+    const house = new CatHouseScreen(progress, { onBack: () => {} });
+    house.mount(container);
+
+    // Изначально живёт только базовый Рыжик
+    expect(container.textContent).toContain('В домике живут: 1 из 9 котиков!');
+    let canvases = container.querySelectorAll('#houseRoomView canvas');
+    expect(canvases.length).toBe(1);
+
+    // Покупаем Дымка и Кота-пирата
+    progress.addCoins(600);
+    progress.buySkin('smoky', 50);
+    progress.buySkin('pirate', 400);
+
+    house.updateProgress(progress);
+
+    // Теперь в домике живут 3 котика
+    expect(container.textContent).toContain('В домике живут: 3 из 9 котиков!');
+    canvases = container.querySelectorAll('#houseRoomView canvas');
+    expect(canvases.length).toBe(3);
+
+    // Имена котиков присутствуют в комнате
+    expect(container.textContent).toContain('Рыжик');
+    expect(container.textContent).toContain('Дымок');
+    expect(container.textContent).toContain('Кот-пират');
+  });
+
+  it('CollectionScreen отрисовывает превью-холсты для каждого котика', async () => {
+    const { CollectionScreen } = await import('../src/ui/CollectionScreen');
+    const container = document.createElement('div');
+    const collection = new CollectionScreen(progress, {
+      onSelectCat: () => {},
+      onBuyCat: () => {},
+      onBack: () => {}
+    });
+    collection.mount(container);
+
+    const canvases = container.querySelectorAll('#skinsListContainer canvas');
+    expect(canvases.length).toBe(9);
+  });
+
+  it('MainMenu отображает выбранного котика и обновляется при смене скина', async () => {
+    const { MainMenu } = await import('../src/ui/MainMenu');
+    const container = document.createElement('div');
+    const menu = new MainMenu(progress, {
+      onPlay: () => {},
+      onLevelSelect: () => {},
+      onCatHouse: () => {},
+      onCollection: () => {},
+      onSettings: () => {}
+    });
+    menu.mount(container);
+
+    const mascotTag = container.querySelector('#mainMenuMascotTag');
+    expect(mascotTag?.textContent).toContain('Рыжик');
+
+    progress.addCoins(500);
+    progress.buySkin('astronaut', 500);
+    progress.selectCat('astronaut');
+    menu.updateProgress(progress);
+
+    expect(mascotTag?.textContent).toContain('Космонавт');
+  });
 });
