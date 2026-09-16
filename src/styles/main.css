@@ -1,0 +1,78 @@
+@import './variables.css';
+@import './reset.css';
+@import './ui.css';
+
+#app {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #EBDDC5; /* Десктопный окружающий фон */
+}
+
+/* Игровой контейнер (ограничен 480px по ширине, на мобильных 100%) */
+.game-viewport {
+  position: relative;
+  width: 100%;
+  max-width: var(--max-app-width);
+  height: var(--tg-viewport-stable-height, 100dvh);
+  max-height: 100dvh;
+  background-color: var(--bg-primary);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.12);
+
+  /* Safe Area для мобильных устройств и Telegram Mini App */
+  padding-top: max(env(safe-area-inset-top, 0px), var(--tg-content-safe-area-inset-top, 0px));
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), var(--tg-content-safe-area-inset-bottom, 0px));
+  padding-left: max(env(safe-area-inset-left, 0px), var(--tg-content-safe-area-inset-left, 0px));
+  padding-right: max(env(safe-area-inset-right, 0px), var(--tg-content-safe-area-inset-right, 0px));
+}
+
+/* Слой Canvas */
+.canvas-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+#gameCanvas {
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+/* Слой UI интерфейса */
+.ui-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  pointer-events: none; /* Пропускает клики на Canvas кроме интерактивных кнопок */
+}
+
+.ui-screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  pointer-events: auto;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
+}
+
+.ui-screen.active {
+  opacity: 1;
+  visibility: visible;
+}

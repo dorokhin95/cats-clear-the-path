@@ -1,0 +1,34 @@
+:root {
+  /* Цветовая палитра */
+  --bg-primary: #FFF7E8;
+  --bg-secondary: #F7EBD3;
+  --color-primary-green: #62C98C;
+  --color-primary-green-hover: #52B57B;
+  --color-primary-green-shadow: #489C6A;
+  --color-accent-orange: #FFB84D;
+  --color-accent-orange-shadow: #D99632;
+  --color-secondary-blue: #63B7FF;
+  --color-secondary-blue-shadow: #4595D6;
+  --color-text-dark: #363636;
+  --color-text-muted: #7A7670;
+  --color-text-light: #FFFFFF;
+  --color-error: #F06A6A;
+  --color-error-shadow: #C44C4C;
+  --color-surface: #FFFFFF;
+  --color-surface-translucent: rgba(255, 255, 255, 0.94);
+  --color-overlay: rgba(30, 25, 20, 0.55);
+
+  /* Тени и скругления */
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-full: 9999px;
+  --shadow-card: 0 8px 24px rgba(54, 54, 54, 0.08);
+
+  /* Типографика */
+  --font-family: 'Rubik', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Размеры */
+  --max-app-width: 480px;
+  --min-touch-target: 44px;
+}
