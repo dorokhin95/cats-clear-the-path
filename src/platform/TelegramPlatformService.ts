@@ -4,6 +4,9 @@ interface TelegramWebApp {
   ready(): void;
   expand(): void;
   close(): void;
+  disableVerticalSwipes?(): void;
+  enableVerticalSwipes?(): void;
+  isVerticalSwipesEnabled?: boolean;
   isExpanded?: boolean;
   viewportHeight?: number;
   viewportStableHeight?: number;
@@ -67,6 +70,10 @@ export class TelegramPlatformService implements PlatformService {
       try {
         this.tg.ready();
         this.tg.expand();
+        if (typeof this.tg.disableVerticalSwipes === 'function') {
+          this.tg.disableVerticalSwipes();
+          console.log('[TelegramPlatformService] Вертикальные свайпы успешно отключены.');
+        }
         this.tg.BackButton.onClick(this.onBackButtonBound);
         console.log('[TelegramPlatformService] Telegram Mini App успешно инициализирован.');
       } catch (e) {

@@ -20,6 +20,8 @@
   max-height: 100dvh;
   background-color: var(--bg-primary);
   overflow: hidden;
+  overscroll-behavior: none;
+  overscroll-behavior-y: none;
   display: flex;
   flex-direction: column;
   box-shadow: 0 0 40px rgba(0, 0, 0, 0.12);
@@ -67,6 +69,8 @@
   display: flex;
   flex-direction: column;
   pointer-events: auto;
+  overscroll-behavior: contain;
+  overscroll-behavior-y: contain;
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
