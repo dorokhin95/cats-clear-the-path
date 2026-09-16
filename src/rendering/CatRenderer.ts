@@ -850,6 +850,416 @@ export class CatRenderer {
   }
 
   /**
+   * Отрисовывает детального домашнего котика в сидячей уютной позе спереди (для Домика, Магазина и Маскота)
+   */
+  public static renderHomeCat(
+    ctx: CanvasRenderingContext2D,
+    skinId: string,
+    centerX: number,
+    centerY: number,
+    size: number
+  ): void {
+    ctx.save();
+    ctx.translate(centerX, centerY);
+
+    const scale = size / 100;
+    ctx.scale(scale, scale);
+
+    const palette = PALETTES[skinId] || PALETTES.ginger;
+
+    // 1. Мягкая тень на полу
+    ctx.fillStyle = 'rgba(54, 54, 54, 0.16)';
+    ctx.beginPath();
+    ctx.ellipse(0, 42, 38, 12, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 2. Хвостик, выглядывающий сбоку
+    ctx.save();
+    ctx.strokeStyle = palette.body;
+    ctx.lineWidth = 10;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(14, 28);
+    ctx.quadraticCurveTo(40, 24, 34, 4);
+    ctx.stroke();
+
+    if (palette.tailTip) {
+      ctx.strokeStyle = palette.tailTip;
+      ctx.lineWidth = 9;
+      ctx.beginPath();
+      ctx.arc(34, 4, 4.5, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // 3. Тело сидящего пушистого котика
+    ctx.save();
+    let bodyGrad: string | CanvasGradient = palette.body;
+    try {
+      const g = ctx.createRadialGradient(-6, 12, 4, 0, 18, 36);
+      if (g && typeof g.addColorStop === 'function') {
+        g.addColorStop(0, palette.bodyLight);
+        g.addColorStop(0.68, palette.body);
+        g.addColorStop(1, palette.bodyDark);
+        bodyGrad = g;
+      }
+    } catch {
+      bodyGrad = palette.body;
+    }
+    ctx.fillStyle = bodyGrad;
+    ctx.strokeStyle = palette.stroke;
+    ctx.lineWidth = 2.2;
+
+    ctx.beginPath();
+    ctx.moveTo(-20, 38);
+    ctx.quadraticCurveTo(-26, 20, -18, 4);
+    ctx.quadraticCurveTo(0, -2, 18, 4);
+    ctx.quadraticCurveTo(26, 20, 20, 38);
+    ctx.quadraticCurveTo(0, 43, -20, 38);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+
+    // 4. Белая манишка на грудке
+    if (palette.muzzle && skinId !== 'shadow') {
+      ctx.save();
+      ctx.fillStyle = palette.muzzle;
+      ctx.beginPath();
+      ctx.ellipse(0, 20, 14, 18, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // 5. Передние лапки с подушечками
+    ctx.save();
+    ctx.fillStyle = palette.paws || '#FFFFFF';
+    ctx.strokeStyle = palette.stroke;
+    ctx.lineWidth = 1.6;
+
+    // Левая лапка
+    ctx.beginPath();
+    ctx.ellipse(-9, 36, 7.5, 5.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Правая лапка
+    ctx.beginPath();
+    ctx.ellipse(9, 36, 7.5, 5.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Розовые подушечки
+    ctx.fillStyle = '#FFAAA6';
+    ctx.beginPath();
+    ctx.arc(-9, 37.5, 2.5, 0, Math.PI * 2);
+    ctx.arc(9, 37.5, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // 6. Ушки
+    ctx.save();
+    ctx.fillStyle = palette.body;
+    ctx.strokeStyle = palette.stroke;
+    ctx.lineWidth = 2.2;
+    ctx.lineJoin = 'round';
+
+    // Левое ушко
+    ctx.beginPath();
+    ctx.moveTo(-24, -14);
+    ctx.quadraticCurveTo(-34, -38, -28, -40);
+    ctx.quadraticCurveTo(-14, -30, -6, -24);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Правое ушко
+    ctx.beginPath();
+    ctx.moveTo(24, -14);
+    ctx.quadraticCurveTo(34, -38, 28, -40);
+    ctx.quadraticCurveTo(14, -30, 6, -24);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Розовые вставки в ушки
+    ctx.fillStyle = palette.earsInner;
+    ctx.beginPath();
+    ctx.moveTo(-20, -16);
+    ctx.lineTo(-27, -36);
+    ctx.lineTo(-8, -24);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(20, -16);
+    ctx.lineTo(27, -36);
+    ctx.lineTo(8, -24);
+    ctx.closePath();
+    ctx.fill();
+
+    // Пиратская золотая серёжка в левом ушке
+    if (skinId === 'pirate') {
+      ctx.save();
+      ctx.strokeStyle = '#FFD54F';
+      ctx.lineWidth = 3.2;
+      ctx.beginPath();
+      ctx.arc(-28, -22, 5.5, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+    ctx.restore();
+
+    // 7. Голова с пухлыми щечками
+    ctx.save();
+    let headGrad: string | CanvasGradient = palette.body;
+    try {
+      const hg = ctx.createRadialGradient(-8, -18, 5, 0, -10, 32);
+      if (hg && typeof hg.addColorStop === 'function') {
+        hg.addColorStop(0, palette.bodyLight);
+        hg.addColorStop(0.7, palette.body);
+        hg.addColorStop(1, palette.bodyDark);
+        headGrad = hg;
+      }
+    } catch {
+      headGrad = palette.body;
+    }
+    ctx.fillStyle = headGrad;
+    ctx.strokeStyle = palette.stroke;
+    ctx.lineWidth = 2.2;
+
+    ctx.beginPath();
+    ctx.ellipse(0, -10, 30, 26, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+
+    // 8. Узоры скинов
+    // Пятна трёхцветки (Calico)
+    if (skinId === 'calico') {
+      ctx.save();
+      ctx.fillStyle = palette.patch || '#FB8C00';
+      ctx.beginPath();
+      ctx.arc(-16, -14, 12, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = palette.patch2 || '#37474F';
+      ctx.beginPath();
+      ctx.arc(18, -16, 11, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Сиамская маска
+    if (skinId === 'siamese') {
+      ctx.save();
+      ctx.fillStyle = palette.muzzle || '#3E2723';
+      ctx.beginPath();
+      ctx.ellipse(0, -6, 18, 13, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Полоски на лобике у Рыжика и Кота в шляпе
+    if (skinId === 'ginger' || skinId === 'hat') {
+      ctx.save();
+      ctx.strokeStyle = palette.stripes || '#E65100';
+      ctx.lineWidth = 2.4;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(0, -32);
+      ctx.lineTo(0, -22);
+      ctx.moveTo(-7, -30);
+      ctx.lineTo(-5, -23);
+      ctx.moveTo(7, -30);
+      ctx.lineTo(5, -23);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // 9. Румянец на щечках
+    ctx.fillStyle = palette.blush;
+    ctx.beginPath();
+    ctx.arc(-17, -4, 6.5, 0, Math.PI * 2);
+    ctx.arc(17, -4, 6.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 10. Усики
+    ctx.save();
+    ctx.strokeStyle = palette.whiskers;
+    ctx.lineWidth = 1.4;
+    ctx.lineCap = 'round';
+    ctx.globalAlpha = 0.65;
+    ctx.beginPath();
+    // Левые усики
+    ctx.moveTo(-12, -4);
+    ctx.lineTo(-34, -8);
+    ctx.moveTo(-12, 1);
+    ctx.lineTo(-32, 5);
+    // Правые усики
+    ctx.moveTo(12, -4);
+    ctx.lineTo(34, -8);
+    ctx.moveTo(12, 1);
+    ctx.lineTo(32, 5);
+    ctx.stroke();
+    ctx.restore();
+
+    // 11. Выразительные сияющие глазки
+    const eyeSpacing = 12.5;
+    const eyeY = -12;
+    const eyeRadius = 5.6;
+
+    // Левый глаз
+    this.drawKawaiiEye(ctx, -eyeSpacing, eyeY, eyeRadius, palette);
+
+    // Правый глаз (или повязка у пирата)
+    if (skinId === 'pirate') {
+      ctx.save();
+      // Ремешок повязки через мордочку
+      ctx.strokeStyle = '#212121';
+      ctx.lineWidth = 2.4;
+      ctx.beginPath();
+      ctx.moveTo(-24, -20);
+      ctx.lineTo(26, -4);
+      ctx.stroke();
+
+      // Сама повязка на правом глазу
+      ctx.fillStyle = '#212121';
+      ctx.strokeStyle = '#3E2723';
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.ellipse(eyeSpacing, eyeY, eyeRadius * 1.3, eyeRadius * 1.2, 0.15, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    } else {
+      this.drawKawaiiEye(ctx, eyeSpacing, eyeY, eyeRadius, palette);
+    }
+
+    // 12. Розовый носик
+    ctx.fillStyle = '#FF7A7A';
+    ctx.beginPath();
+    ctx.ellipse(0, -4.5, 3.8, 3, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 13. Улыбающийся ротик (ω)
+    ctx.strokeStyle = '#4E342E';
+    ctx.lineWidth = 1.8;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.arc(-3.2, -1.5, 3.2, 0.15 * Math.PI, 0.9 * Math.PI);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(3.2, -1.5, 3.2, 0.1 * Math.PI, 0.85 * Math.PI);
+    ctx.stroke();
+
+    // 14. Специфические детальные аксессуары
+    // 🎩 Шляпа-котелок
+    if (skinId === 'hat') {
+      ctx.save();
+      const hatY = -28;
+      // Поля
+      ctx.fillStyle = '#212121';
+      ctx.beginPath();
+      ctx.ellipse(0, hatY, 26, 7, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Тулья
+      let crownFill: string | CanvasGradient = '#263238';
+      try {
+        const cg = ctx.createLinearGradient(0, hatY - 22, 0, hatY);
+        if (cg && typeof cg.addColorStop === 'function') {
+          cg.addColorStop(0, '#37474F');
+          cg.addColorStop(1, '#212121');
+          crownFill = cg;
+        }
+      } catch {
+        crownFill = '#263238';
+      }
+      ctx.fillStyle = crownFill;
+      ctx.beginPath();
+      if (typeof ctx.roundRect === 'function') {
+        ctx.roundRect(-14, hatY - 22, 28, 22, [6, 6, 0, 0]);
+      } else {
+        ctx.rect(-14, hatY - 22, 28, 22);
+      }
+      ctx.fill();
+
+      // Шелковая алая лента
+      ctx.fillStyle = '#D32F2F';
+      ctx.fillRect(-14, hatY - 7, 28, 6);
+
+      // Золотая пряжка
+      ctx.strokeStyle = '#FFD54F';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(-4, hatY - 7, 8, 6);
+      ctx.restore();
+    }
+
+    // 🏴‍☠️ Пиратская треуголка
+    if (skinId === 'pirate') {
+      ctx.save();
+      const hatY = -28;
+      ctx.fillStyle = '#212121';
+      ctx.strokeStyle = '#BCAAA4';
+      ctx.lineWidth = 2;
+
+      ctx.beginPath();
+      ctx.moveTo(-36, hatY + 4);
+      ctx.quadraticCurveTo(0, hatY - 24, 36, hatY + 4);
+      ctx.quadraticCurveTo(0, hatY - 6, -36, hatY + 4);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Золотой знак лапки на треуголке
+      ctx.fillStyle = '#FFD54F';
+      ctx.beginPath();
+      ctx.arc(0, hatY - 8, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // 🚀 Скафандр космонавта
+    if (skinId === 'astronaut') {
+      ctx.save();
+      // Стеклянный сферический купол шлема
+      ctx.strokeStyle = '#B0BEC5';
+      ctx.lineWidth = 3.2;
+      ctx.fillStyle = 'rgba(129, 212, 250, 0.22)';
+      ctx.beginPath();
+      ctx.arc(0, -9, 36, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // Сферические световые блики
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+      ctx.lineWidth = 3.6;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.arc(0, -9, 31, -0.82 * Math.PI, -0.28 * Math.PI);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(0, -9, 31, 0.35 * Math.PI, 0.55 * Math.PI);
+      ctx.stroke();
+
+      // Металлическое кольцо воротника
+      ctx.fillStyle = '#78909C';
+      ctx.strokeStyle = '#546E7A';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.ellipse(0, 24, 24, 6.5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    ctx.restore();
+  }
+
+  /**
    * Отрисовывает превью котика на переданном контексте в заданных координатах
    */
   public static renderPreview(
@@ -859,19 +1269,7 @@ export class CatRenderer {
     centerY: number,
     size: number
   ): void {
-    ctx.save();
-    ctx.translate(centerX, centerY);
-    const radius = size * 0.4;
-    const palette = PALETTES[skinId] || PALETTES.ginger;
-
-    // Мягкая тень под котиком
-    ctx.fillStyle = 'rgba(54, 54, 54, 0.14)';
-    ctx.beginPath();
-    ctx.ellipse(0, radius * 0.85, radius * 0.82, radius * 0.28, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    this.drawBodyAndHead(ctx, radius, palette, skinId, 'down', false);
-    ctx.restore();
+    this.renderHomeCat(ctx, skinId, centerX, centerY, size);
   }
 
   /**
@@ -889,6 +1287,6 @@ export class CatRenderer {
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, width, height);
 
-    this.renderPreview(ctx, skinId, width / 2, height / 2, Math.min(width, height));
+    this.renderHomeCat(ctx, skinId, width / 2, height / 2, Math.min(width, height));
   }
 }

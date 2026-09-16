@@ -63,7 +63,7 @@ export class CatHouseScreen implements IScreen {
       </div>
 
       <!-- Визуальная комната домика котиков -->
-      <div id="houseRoomView" style="position: relative; width: 100%; height: 350px; background: linear-gradient(180deg, #FDEED9 0%, #F5E0C3 68%, #D8BE9B 68%, #C9AE89 100%); border-radius: 24px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.06); overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; align-items: center;">
+      <div id="houseRoomView" style="position: relative; width: 100%; height: 380px; background: linear-gradient(180deg, #FDEED9 0%, #F5E0C3 68%, #D8BE9B 68%, #C9AE89 100%); border-radius: 24px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.06); overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; align-items: center;">
         <!-- Объекты комнаты генерируются динамически -->
       </div>
 
@@ -200,13 +200,13 @@ export class CatHouseScreen implements IScreen {
       if (spot.left !== undefined) catContainer.style.left = typeof spot.left === 'number' ? `${spot.left}px` : spot.left;
       if (spot.right !== undefined) catContainer.style.right = typeof spot.right === 'number' ? `${spot.right}px` : spot.right;
 
-      // Канвас для качественной отрисовки скина котика
+      // Канвас для качественной детальной отрисовки домашнего котика
       const canvas = document.createElement('canvas');
-      canvas.width = 54;
-      canvas.height = 54;
-      canvas.style.width = '54px';
-      canvas.style.height = '54px';
-      canvas.style.filter = 'drop-shadow(0 3px 6px rgba(54,54,54,0.18))';
+      canvas.width = 76;
+      canvas.height = 76;
+      canvas.style.width = '76px';
+      canvas.style.height = '76px';
+      canvas.style.filter = 'drop-shadow(0 4px 10px rgba(54,54,54,0.18))';
 
       CatRenderer.renderPreviewToCanvas(canvas, catSkinId);
       catContainer.appendChild(canvas);
@@ -214,15 +214,15 @@ export class CatHouseScreen implements IScreen {
       // Имя котика под фигуркой (с отметкой текущего любимца)
       const label = document.createElement('span');
       label.textContent = isSelected ? `★ ${catName}` : catName;
-      label.style.fontSize = '10px';
+      label.style.fontSize = '11px';
       label.style.fontWeight = '700';
       label.style.color = isSelected ? '#E65100' : '#5D4037';
-      label.style.background = isSelected ? '#FFF8E1' : 'rgba(255, 255, 255, 0.85)';
-      label.style.border = isSelected ? '1px solid #FFE082' : 'none';
-      label.style.padding = '1px 6px';
-      label.style.borderRadius = '6px';
-      label.style.marginTop = '-2px';
-      label.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+      label.style.background = isSelected ? '#FFF8E1' : 'rgba(255, 255, 255, 0.9)';
+      label.style.border = isSelected ? '1px solid #FFE082' : '1px solid rgba(0,0,0,0.06)';
+      label.style.padding = '2px 8px';
+      label.style.borderRadius = '8px';
+      label.style.marginTop = '-4px';
+      label.style.boxShadow = '0 2px 4px rgba(0,0,0,0.08)';
       label.style.pointerEvents = 'none';
       catContainer.appendChild(label);
 
@@ -231,7 +231,7 @@ export class CatHouseScreen implements IScreen {
         e.stopPropagation();
 
         if (!reducedMotion) {
-          catContainer.style.transform = 'scale(1.3) translateY(-8px)';
+          catContainer.style.transform = 'scale(1.25) translateY(-8px)';
           setTimeout(() => {
             catContainer.style.transform = 'scale(1)';
           }, 220);
@@ -240,9 +240,9 @@ export class CatHouseScreen implements IScreen {
           const heart = document.createElement('div');
           heart.textContent = '❤️';
           heart.style.position = 'absolute';
-          heart.style.left = '16px';
-          heart.style.top = '-16px';
-          heart.style.fontSize = '22px';
+          heart.style.left = '26px';
+          heart.style.top = '-20px';
+          heart.style.fontSize = '24px';
           heart.style.pointerEvents = 'none';
           heart.style.transition = 'all 0.65s cubic-bezier(0.22, 1, 0.36, 1)';
           heart.style.zIndex = '30';

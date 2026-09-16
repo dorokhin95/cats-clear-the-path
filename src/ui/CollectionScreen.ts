@@ -87,7 +87,7 @@ export class CollectionScreen implements IScreen {
 
       card.innerHTML = `
         <div style="display: flex; align-items: center; gap: 14px;">
-          <div id="skinCanvasContainer_${skin.id}" style="width: 52px; height: 52px; min-width: 52px; border-radius: 14px; background: #FFF6EC; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.06); position: relative; overflow: hidden;"></div>
+          <div id="skinCanvasContainer_${skin.id}" style="width: 68px; height: 68px; min-width: 68px; border-radius: 16px; background: #FFF6EC; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); position: relative; overflow: hidden;"></div>
           <div style="display: flex; flex-direction: column; gap: 3px;">
             <div style="display: flex; align-items: center; gap: 8px;">
               <span style="font-weight: 700; font-size: 18px; color: var(--color-text-dark);">${skin.name}</span>
@@ -95,7 +95,7 @@ export class CollectionScreen implements IScreen {
                 ${rarityLabel}
               </span>
             </div>
-            <div style="font-size: 13px; color: var(--color-text-muted); max-width: 170px; line-height: 1.2;">
+            <div style="font-size: 13px; color: var(--color-text-muted); max-width: 160px; line-height: 1.2;">
               ${skin.description}
             </div>
           </div>
@@ -107,10 +107,10 @@ export class CollectionScreen implements IScreen {
       const previewBox = card.querySelector(`#skinCanvasContainer_${skin.id}`);
       if (previewBox) {
         const canvas = document.createElement('canvas');
-        canvas.width = 52;
-        canvas.height = 52;
-        canvas.style.width = '52px';
-        canvas.style.height = '52px';
+        canvas.width = 68;
+        canvas.height = 68;
+        canvas.style.width = '68px';
+        canvas.style.height = '68px';
         CatRenderer.renderPreviewToCanvas(canvas, skin.id);
         previewBox.appendChild(canvas);
       }
