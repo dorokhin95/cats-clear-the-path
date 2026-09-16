@@ -230,39 +230,22 @@ export class CatRenderer {
 
     ctx.rotate(angle);
 
-    // Крупная, сверх-контрастная и четкая стрелка направления движения (белая с жирным черным контуром)
-    const startX = -radius * 0.2;
-    const arrowTipX = radius * 0.92;
-    const headLength = radius * 0.54;
-    const headWidth = radius * 0.66;
-    const shaftHalfWidth = radius * 0.2;
+    // Стрелка/шеврон на внешнем краю тела котика
+    const markerDist = radius * 0.98;
+    const arrowWidth = radius * 0.38;
+    const arrowLength = radius * 0.32;
 
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
-    ctx.shadowBlur = 5;
-    ctx.shadowOffsetX = 1;
-    ctx.shadowOffsetY = 1;
-
-    ctx.fillStyle = '#FFFFFF';
-    ctx.strokeStyle = '#151722';
-    ctx.lineWidth = 3.2;
+    ctx.fillStyle = '#2B2D42';
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = 2.5;
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';
 
     ctx.beginPath();
-    // Хвостик стрелки
-    ctx.moveTo(startX, -shaftHalfWidth);
-    // До основания наконечника сверху
-    ctx.lineTo(arrowTipX - headLength, -shaftHalfWidth);
-    // Верхнее крыло наконечника
-    ctx.lineTo(arrowTipX - headLength, -headWidth / 2);
-    // Острие стрелки
-    ctx.lineTo(arrowTipX, 0);
-    // Нижнее крыло наконечника
-    ctx.lineTo(arrowTipX - headLength, headWidth / 2);
-    // До основания наконечника снизу
-    ctx.lineTo(arrowTipX - headLength, shaftHalfWidth);
-    // Завершение хвостика
-    ctx.lineTo(startX, shaftHalfWidth);
+    ctx.moveTo(markerDist - arrowLength, -arrowWidth / 2);
+    ctx.lineTo(markerDist + arrowLength * 0.5, 0);
+    ctx.lineTo(markerDist - arrowLength, arrowWidth / 2);
+    ctx.lineTo(markerDist - arrowLength * 0.4, 0);
     ctx.closePath();
 
     ctx.fill();
