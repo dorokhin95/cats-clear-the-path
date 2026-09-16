@@ -58,12 +58,12 @@ export class GameplayHUD implements IScreen {
         </div>
       </div>
 
-      <!-- Центральный всплывающий индикатор комбо с таймером -->
-      <div id="hudComboContainer" style="opacity: 0; transform: scale(0.8); transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s ease; align-self: center; display: flex; flex-direction: column; align-items: center; gap: 4px; pointer-events: none;">
-        <div id="hudComboBadge" style="background: var(--color-accent-orange); color: white; padding: 6px 18px; border-radius: 20px; font-weight: 800; font-size: 19px; box-shadow: 0 4px 12px rgba(255, 184, 77, 0.4);">
+      <!-- Компактный плавающий индикатор комбо в верхней зоне (не перекрывает игровое поле и котиков) -->
+      <div id="hudComboContainer" style="position: absolute; top: 72px; left: 50%; transform: translateX(-50%) scale(0.8); opacity: 0; transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s ease; display: flex; flex-direction: column; align-items: center; gap: 3px; pointer-events: none; z-index: 15;">
+        <div id="hudComboBadge" style="background: var(--color-accent-orange); color: white; padding: 4px 16px; border-radius: 16px; font-weight: 800; font-size: 16px; box-shadow: 0 4px 12px rgba(255, 184, 77, 0.45); white-space: nowrap;">
           COMBO ×2
         </div>
-        <div id="hudComboBar" style="width: 90px; height: 6px; background: rgba(0,0,0,0.15); border-radius: 3px; overflow: hidden;">
+        <div id="hudComboBar" style="width: 84px; height: 5px; background: rgba(0,0,0,0.15); border-radius: 3px; overflow: hidden;">
           <div id="hudComboFill" style="width: 100%; height: 100%; background: #FFD166; border-radius: 3px; transition: width 0.08s linear;"></div>
         </div>
       </div>
@@ -142,12 +142,12 @@ export class GameplayHUD implements IScreen {
     if (combo >= 2 && remainingSec > 0) {
       badge.textContent = `COMBO ×${combo}`;
       container.style.opacity = '1';
-      container.style.transform = 'scale(1)';
+      container.style.transform = 'translateX(-50%) scale(1)';
       const pct = Math.max(0, Math.min(100, (remainingSec / maxSec) * 100));
       fill.style.width = `${pct}%`;
     } else {
       container.style.opacity = '0';
-      container.style.transform = 'scale(0.8)';
+      container.style.transform = 'translateX(-50%) scale(0.8)';
       fill.style.width = '0%';
     }
   }
