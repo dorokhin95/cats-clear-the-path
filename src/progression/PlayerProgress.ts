@@ -1,5 +1,10 @@
 import { SettingsData } from '../ui/SettingsMenu';
 
+export interface CatPetStatus {
+  level: number;       // 0..100 (процент наглаженности)
+  lastPetTime: number; // timestamp Date.now()
+}
+
 export interface PlayerData {
   saveVersion?: number;
   lastUnlockedLevel: number;
@@ -14,6 +19,7 @@ export interface PlayerData {
   bestComboPerLevel: Record<number, number>;
   bestScorePerLevel: Record<number, number>;
   petCount?: number;
+  catPetting?: Record<string, CatPetStatus>;
 }
 
 export class PlayerProgress {
@@ -30,6 +36,7 @@ export class PlayerProgress {
       selectedCat: 'ginger',
       remainingHints: 3,
       petCount: 0,
+      catPetting: initialData?.catPetting ? { ...initialData.catPetting } : {},
       settings: {
         musicVolume: 0.7,
         sfxVolume: 0.8,
@@ -43,6 +50,8 @@ export class PlayerProgress {
       bestScorePerLevel: {},
       ...initialData
     };
+
+    if (!this.data.catPetting) this.data.catPetting = {};
 
     // Гарантируем, что unlockedCats всегда является массивом и накапливает всех разблокированных котиков
     const existingCats: string[] = Array.isArray(initialData?.unlockedCats) && initialData!.unlockedCats.length > 0
@@ -218,6 +227,96 @@ export class PlayerProgress {
     this.data.tutorialCompleted = completed;
   }
 
+  public getUnlockedCats(): string[] {
+    return Array.from(new Set(this.data.unlockedCats || ['ginger']));
+  }
+
+  /**
+   * Возвращает текущий уровень наглаженности конкретного котика (0..100%)
+   * Наглаженность постепенно уменьшается со временем (скорость: ~10% в час)
+   */
+  public getCatPetLevel(catId: string, now: number = Date.now()): number {
+    if (!this.data.catPetting) {
+      this.data.catPetting = {};
+    }
+    const status = this.data.catPetting[catId];
+    if (!status) {
+      // Начальный базовый уровень для нового котика - 40% (спокоен, не расстроен)
+      return 40;
+    }
+    const elapsedMs = Math.max(0, now - status.lastPetTime);
+    const elapsedHours = elapsedMs / (1000 * 3600);
+    const decay = elapsedHours * 10; // -10% за каждый час
+    return Math.max(0, Math.min(100, Math.round(status.level - decay)));
+  }
+
+  /**
+   * Возвращает иконку эмоции котика и текстовое состояние на основе процента наглаженности
+   */
+  public getCatEmotion(level: number): { emoji: string; statusText: string; color: string } {
+    if (level >= 80) return { emoji: '💖', statusText: 'Обожает вас!', color: '#E91E63' };
+    if (level >= 50) return { emoji: '😺', statusText: 'Доволен и мурчит', color: '#4CAF50' };
+    if (level >= 25) return { emoji: '🐱', statusText: 'Спокоен', color: '#FFA000' };
+    if (level >= 1) return { emoji: '🥺', statusText: 'Хочет ласки', color: '#FF7043' };
+    return { emoji: '😿', statusText: 'Очень скучает', color: '#9E9E9E' };
+  }
+
+  /**
+   * Проверяет, наглажены ли ВСЕ разблокированные котики до 100%
+   */
+  public areAllCatsFullyPetted(now: number = Date.now()): boolean {
+    const unlocked = this.getUnlockedCats();
+    if (unlocked.length === 0) return false;
+    return unlocked.every(catId => this.getCatPetLevel(catId, now) >= 100);
+  }
+
+  /**
+   * Средний уровень счастья и уюта в домике (0..100%)
+   */
+  public getAveragePetLevel(now: number = Date.now()): number {
+    const unlocked = this.getUnlockedCats();
+    if (unlocked.length === 0) return 0;
+    const sum = unlocked.reduce((acc, catId) => acc + this.getCatPetLevel(catId, now), 0);
+    return Math.round(sum / unlocked.length);
+  }
+
+  /**
+   * Погладить конкретного котика:
+   * - Добавляет +25% к наглаженности (до 100%)
+   * - Фиксирует timestamp поглаживания
+   * - Если ВСЕ котики в доме достигли 100%, начисляет скрытый бонус (+15 монет)
+   */
+  public petCat(catId: string, now: number = Date.now()): { newLevel: number; allMaxBonus: boolean; rewardCoins: number } {
+    if (!this.data.catPetting) {
+      this.data.catPetting = {};
+    }
+    this.data.petCount = (this.data.petCount || 0) + 1;
+
+    // Были ли все котики на 100% ДО этого поглаживания?
+    const wasAllHappy = this.areAllCatsFullyPetted(now);
+
+    const currentLevel = this.getCatPetLevel(catId, now);
+    const newLevel = Math.min(100, currentLevel + 25);
+
+    this.data.catPetting[catId] = {
+      level: newLevel,
+      lastPetTime: now
+    };
+
+    // Стали ли теперь ВСЕ котики 100%?
+    const isAllHappyNow = this.areAllCatsFullyPetted(now);
+    let allMaxBonus = false;
+    let rewardCoins = 0;
+
+    if (!wasAllHappy && isAllHappyNow) {
+      allMaxBonus = true;
+      rewardCoins = 15;
+      this.addCoins(rewardCoins);
+    }
+
+    return { newLevel, allMaxBonus, rewardCoins };
+  }
+
   public getPetCount(): number {
     return this.data.petCount || 0;
   }
@@ -225,7 +324,6 @@ export class PlayerProgress {
   public incrementPetCount(): { newCount: number; rewardCoins: number } {
     this.data.petCount = (this.data.petCount || 0) + 1;
     let rewardCoins = 0;
-    // Каждые 15 поглаживаний котики дарят игроку 5 монеток
     if (this.data.petCount % 15 === 0) {
       rewardCoins = 5;
       this.addCoins(rewardCoins);

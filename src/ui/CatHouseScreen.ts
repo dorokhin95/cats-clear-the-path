@@ -63,21 +63,23 @@ export class CatHouseScreen implements IScreen {
         </div>
       </div>
 
-      <!-- Счётчик «Наглаженности» котиков -->
-      <div id="petLoveWidget" style="width: 100%; background: linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%); border: 2px solid #FFCDD2; border-radius: 18px; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(239, 83, 80, 0.12); position: relative; overflow: hidden;">
+      <!-- Индикатор общего уюта и счастья в домике -->
+      <div id="petLoveWidget" style="width: 100%; background: white; border-radius: 18px; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.04);">
         <div style="display: flex; align-items: center; gap: 10px;">
-          <div style="font-size: 30px; animation: bounce 1.8s infinite;">❤️</div>
+          <div id="houseCozyHeartIcon" style="font-size: 26px; animation: bounce 2s infinite;">💖</div>
           <div style="display: flex; flex-direction: column;">
-            <span style="font-size: 15px; font-weight: 800; color: #C62828;">
-              Наглаженность: <span id="petCountValue">${this.progress.getPetCount()}</span> 🐾
+            <span style="font-size: 14px; font-weight: 800; color: #5D4037;">
+              Уют в домике: <span id="houseCozyPercent">${this.progress.getAveragePetLevel()}%</span>
             </span>
-            <span id="petRankValue" style="font-size: 12px; font-weight: 700; color: #E53935;">
-              ${this.progress.getPetRank().icon} Ранг: ${this.progress.getPetRank().rankName}
+            <span id="houseCozyStatus" style="font-size: 11px; font-weight: 700; color: #8D6E63;">
+              ${this.getHouseStatusText(this.progress.getAveragePetLevel())}
             </span>
           </div>
         </div>
-        <div style="text-align: right; font-size: 11px; font-weight: 700; color: #8E24AA; background: rgba(255,255,255,0.85); padding: 4px 8px; border-radius: 10px; border: 1px solid #E1BEE7;">
-          ✨ Каждые 15 ласк = +5 💰!
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <div style="width: 72px; height: 8px; background: #ECEFF1; border-radius: 4px; overflow: hidden; border: 1px solid #CFD8DC; box-shadow: inset 0 1px 2px rgba(0,0,0,0.08);">
+            <div id="houseCozyBarFill" style="width: ${this.progress.getAveragePetLevel()}%; height: 100%; background: linear-gradient(90deg, #FF80AB, #F50057); border-radius: 4px; transition: width 0.35s ease, background 0.35s ease;"></div>
+          </div>
         </div>
       </div>
 
@@ -122,16 +124,8 @@ export class CatHouseScreen implements IScreen {
     const completedLevels = this.progress.getHighestCompletedLevel();
     const banner = this.element.querySelector('#houseMilestoneBanner');
     const room = this.element.querySelector('#houseRoomView') as HTMLElement;
-    const coinEl = this.element.querySelector('#catHouseCoinBalance');
-    const petCountEl = this.element.querySelector('#petCountValue');
-    const petRankEl = this.element.querySelector('#petRankValue');
 
-    if (coinEl) coinEl.textContent = `${this.progress.getCoins()}`;
-    if (petCountEl) petCountEl.textContent = `${this.progress.getPetCount()}`;
-    if (petRankEl) {
-      const rank = this.progress.getPetRank();
-      petRankEl.textContent = `${rank.icon} Ранг: ${rank.rankName}`;
-    }
+    this.updateHouseCozyHeader();
 
     if (!banner || !room) return;
 
@@ -307,6 +301,51 @@ export class CatHouseScreen implements IScreen {
       if (spot.left !== undefined) catContainer.style.left = typeof spot.left === 'number' ? `${spot.left}px` : spot.left;
       if (spot.right !== undefined) catContainer.style.right = typeof spot.right === 'number' ? `${spot.right}px` : spot.right;
 
+      // Текущий уровень наглаженности и эмоция
+      const petLevel = this.progress.getCatPetLevel(catSkinId);
+      const emotion = this.progress.getCatEmotion(petLevel);
+
+      // Плашка эмоции и шкалы наглаженности над котиком
+      const statusBadge = document.createElement('div');
+      statusBadge.style.display = 'flex';
+      statusBadge.style.flexDirection = 'column';
+      statusBadge.style.alignItems = 'center';
+      statusBadge.style.marginBottom = '2px';
+      statusBadge.style.pointerEvents = 'none';
+
+      const emotionEl = document.createElement('span');
+      emotionEl.className = 'cat-emotion-icon';
+      emotionEl.textContent = emotion.emoji;
+      emotionEl.title = emotion.statusText;
+      emotionEl.style.fontSize = '16px';
+      emotionEl.style.lineHeight = '1';
+      emotionEl.style.filter = 'drop-shadow(0 2px 3px rgba(0,0,0,0.2))';
+      emotionEl.style.transition = 'transform 0.2s ease';
+      statusBadge.appendChild(emotionEl);
+
+      // Миниатюрная полоска наглаженности
+      const miniBar = document.createElement('div');
+      miniBar.style.width = '36px';
+      miniBar.style.height = '5px';
+      miniBar.style.background = 'rgba(0,0,0,0.22)';
+      miniBar.style.borderRadius = '3px';
+      miniBar.style.overflow = 'hidden';
+      miniBar.style.boxShadow = 'inset 0 1px 2px rgba(0,0,0,0.3)';
+      miniBar.style.border = '1px solid rgba(255,255,255,0.7)';
+      miniBar.style.marginTop = '2px';
+
+      const miniBarFill = document.createElement('div');
+      miniBarFill.className = 'cat-pet-bar-fill';
+      miniBarFill.style.width = `${petLevel}%`;
+      miniBarFill.style.height = '100%';
+      miniBarFill.style.borderRadius = '2px';
+      miniBarFill.style.background = emotion.color;
+      miniBarFill.style.transition = 'width 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.25s ease';
+      miniBar.appendChild(miniBarFill);
+      statusBadge.appendChild(miniBar);
+
+      catContainer.appendChild(statusBadge);
+
       // Канвас для качественной детальной отрисовки домашнего котика
       const canvas = document.createElement('canvas');
       canvas.width = 76;
@@ -337,41 +376,38 @@ export class CatHouseScreen implements IScreen {
       catContainer.addEventListener('click', (e) => {
         e.stopPropagation();
 
-        // 1. Инкремент счётчика наглаженности и получение бонусов
-        const petResult = this.progress.incrementPetCount();
+        // 1. Поглаживание конкретного котика
+        const petResult = this.progress.petCat(catSkinId);
         SaveService.save(this.progress);
 
-        // 2. Обновление счётчика на экране
-        const pVal = this.element?.querySelector('#petCountValue');
-        const rVal = this.element?.querySelector('#petRankValue');
-        const cVal = this.element?.querySelector('#catHouseCoinBalance');
-        if (pVal) pVal.textContent = `${petResult.newCount}`;
-        if (rVal) {
-          const rank = this.progress.getPetRank();
-          rVal.textContent = `${rank.icon} Ранг: ${rank.rankName}`;
-        }
-        if (cVal) cVal.textContent = `${this.progress.getCoins()}`;
+        // 2. Обновление эмоции и шкалы этого котика
+        const newEmotion = this.progress.getCatEmotion(petResult.newLevel);
+        emotionEl.textContent = newEmotion.emoji;
+        emotionEl.title = newEmotion.statusText;
+        miniBarFill.style.width = `${petResult.newLevel}%`;
+        miniBarFill.style.background = newEmotion.color;
 
-        // 3. Вызов коллбэков (звук мурлыканья и награда монетками)
+        // 3. Обновление общего уюта в домике
+        this.updateHouseCozyHeader();
+
+        // 4. Звук мурлыканья
         this.callbacks.onPetCat?.();
-        if (petResult.rewardCoins > 0) {
-          this.callbacks.onRewardCoins?.(petResult.rewardCoins);
-          this.showToastBonus(`✨ Муррр! Спасибо за ласку: +${petResult.rewardCoins} 💰! ✨`);
-        }
 
-        // 4. Анимация подпрыгивания и всплывающих сердечек
+        // 5. Анимация подпрыгивания и всплывающих сердечек
         if (!reducedMotion) {
-          catContainer.style.transform = 'scale(1.25) translateY(-8px)';
+          catContainer.style.transform = 'scale(1.22) translateY(-7px)';
+          emotionEl.style.transform = 'scale(1.35)';
           setTimeout(() => {
             catContainer.style.transform = 'scale(1)';
+            emotionEl.style.transform = 'scale(1)';
           }, 220);
 
           // Всплывающее сердечко ❤️
           const heart = document.createElement('div');
-          heart.textContent = petResult.rewardCoins > 0 ? '💖' : '❤️';
+          heart.textContent = petResult.newLevel >= 80 ? '💖' : '❤️';
           heart.style.position = 'absolute';
           heart.style.left = '26px';
-          heart.style.top = '-20px';
+          heart.style.top = '-14px';
           heart.style.fontSize = '24px';
           heart.style.pointerEvents = 'none';
           heart.style.transition = 'all 0.65s cubic-bezier(0.22, 1, 0.36, 1)';
@@ -387,38 +423,103 @@ export class CatHouseScreen implements IScreen {
             heart.remove();
           }, 700);
         }
+
+        // 6. Скрытый приятный бонус, если ВСЕ котики теперь на 100%!
+        if (petResult.allMaxBonus) {
+          this.callbacks.onRewardCoins?.(petResult.rewardCoins);
+          this.updateHouseCozyHeader();
+          this.triggerAllCatsCelebration();
+        }
       });
 
       room.appendChild(catContainer);
     });
   }
 
-  private showToastBonus(text: string): void {
+  private updateHouseCozyHeader(): void {
     if (!this.element) return;
-    const toast = document.createElement('div');
-    toast.textContent = text;
-    toast.style.position = 'absolute';
-    toast.style.top = '120px';
-    toast.style.left = '50%';
-    toast.style.transform = 'translateX(-50%)';
-    toast.style.background = 'linear-gradient(135deg, #FF9800, #F57C00)';
-    toast.style.color = 'white';
-    toast.style.fontWeight = '800';
-    toast.style.fontSize = '14px';
-    toast.style.padding = '8px 18px';
-    toast.style.borderRadius = '20px';
-    toast.style.boxShadow = '0 6px 18px rgba(245, 124, 0, 0.35)';
-    toast.style.zIndex = '100';
-    toast.style.pointerEvents = 'none';
-    toast.style.transition = 'all 0.4s ease';
+    const avg = this.progress.getAveragePetLevel();
+    const percentEl = this.element.querySelector('#houseCozyPercent');
+    const statusEl = this.element.querySelector('#houseCozyStatus');
+    const barEl = this.element.querySelector('#houseCozyBarFill') as HTMLElement;
+    const coinEl = this.element.querySelector('#catHouseCoinBalance');
 
-    this.element.appendChild(toast);
+    if (percentEl) percentEl.textContent = `${avg}%`;
+    if (statusEl) statusEl.textContent = this.getHouseStatusText(avg);
+    if (barEl) {
+      barEl.style.width = `${avg}%`;
+      barEl.style.background = avg >= 80
+        ? 'linear-gradient(90deg, #FF80AB, #F50057)'
+        : avg >= 50
+        ? 'linear-gradient(90deg, #81C784, #4CAF50)'
+        : 'linear-gradient(90deg, #FFB74D, #FF9800)';
+    }
+    if (coinEl) coinEl.textContent = `${this.progress.getCoins()}`;
+  }
 
-    setTimeout(() => {
-      toast.style.opacity = '0';
-      toast.style.transform = 'translateX(-50%) translateY(-15px)';
-      setTimeout(() => toast.remove(), 400);
-    }, 1500);
+  private getHouseStatusText(avgLevel: number): string {
+    if (avgLevel >= 95) return 'Все котики мурчат от счастья! 💖';
+    if (avgLevel >= 75) return 'В домике царит любовь и радость ✨';
+    if (avgLevel >= 50) return 'Котики довольны, но не против ласки 🐾';
+    if (avgLevel >= 25) return 'Котики соскучились по вам 🐱';
+    return 'Котикам очень не хватает вашего тепла 🥺';
+  }
+
+  private triggerAllCatsCelebration(): void {
+    const room = this.element?.querySelector('#houseRoomView');
+    if (!room) return;
+
+    // Все котики в комнате подпрыгивают от восторга
+    const catFigures = room.querySelectorAll<HTMLElement>('.house-cat-figure');
+    catFigures.forEach((catEl, idx) => {
+      setTimeout(() => {
+        catEl.style.transform = 'scale(1.25) translateY(-10px)';
+        setTimeout(() => {
+          catEl.style.transform = 'scale(1)';
+        }, 320);
+
+        // Салют сердечек от каждого
+        const heart = document.createElement('div');
+        heart.textContent = '💖';
+        heart.style.position = 'absolute';
+        heart.style.left = '28px';
+        heart.style.top = '-16px';
+        heart.style.fontSize = '26px';
+        heart.style.pointerEvents = 'none';
+        heart.style.transition = 'all 0.8s cubic-bezier(0.22, 1, 0.36, 1)';
+        heart.style.zIndex = '40';
+        catEl.appendChild(heart);
+
+        requestAnimationFrame(() => {
+          heart.style.transform = 'translateY(-45px) scale(1.5)';
+          heart.style.opacity = '0';
+        });
+
+        setTimeout(() => heart.remove(), 850);
+      }, idx * 60);
+    });
+
+    // Праздничный блеск звёздочек над комнатой
+    for (let i = 0; i < 8; i++) {
+      const star = document.createElement('div');
+      star.textContent = ['✨', '🌟', '💖', '⭐'][i % 4];
+      star.style.position = 'absolute';
+      star.style.left = `${12 + Math.random() * 76}%`;
+      star.style.top = `${20 + Math.random() * 50}%`;
+      star.style.fontSize = `${20 + Math.random() * 12}px`;
+      star.style.pointerEvents = 'none';
+      star.style.zIndex = '35';
+      star.style.transition = 'all 1s ease-out';
+      star.style.opacity = '1';
+      room.appendChild(star);
+
+      requestAnimationFrame(() => {
+        star.style.transform = `translateY(-35px) scale(${1.2 + Math.random() * 0.4})`;
+        star.style.opacity = '0';
+      });
+
+      setTimeout(() => star.remove(), 1100);
+    }
   }
 
   public show(): void {
