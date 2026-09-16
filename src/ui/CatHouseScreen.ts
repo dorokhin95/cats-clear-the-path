@@ -101,7 +101,12 @@ export class CatHouseScreen implements IScreen {
 
     if (!banner || !room) return;
 
-    const unlockedCatIds = this.progress.getData().unlockedCats || ['ginger'];
+    const rawUnlocked = this.progress.getData().unlockedCats || ['ginger'];
+    const catSet = new Set<string>(Array.isArray(rawUnlocked) ? rawUnlocked : ['ginger']);
+    catSet.add('ginger');
+    const selected = this.progress.getSelectedCat();
+    if (selected) catSet.add(selected);
+    const unlockedCatIds = Array.from(catSet);
     const totalSkins = CatCollection.getAllSkins();
     const unlockedCount = unlockedCatIds.length;
 

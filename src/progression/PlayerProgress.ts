@@ -42,6 +42,18 @@ export class PlayerProgress {
       ...initialData
     };
 
+    // Гарантируем, что unlockedCats всегда является массивом и накапливает всех разблокированных котиков
+    const existingCats: string[] = Array.isArray(initialData?.unlockedCats) && initialData!.unlockedCats.length > 0
+      ? initialData!.unlockedCats
+      : ['ginger'];
+
+    const catSet = new Set<string>(existingCats);
+    catSet.add('ginger');
+    if (this.data.selectedCat) {
+      catSet.add(this.data.selectedCat);
+    }
+    this.data.unlockedCats = Array.from(catSet);
+
     // Гарантируем инициализацию рекордов при частичных данных
     if (!this.data.bestTimeMsPerLevel) this.data.bestTimeMsPerLevel = {};
     if (!this.data.bestComboPerLevel) this.data.bestComboPerLevel = {};
@@ -181,7 +193,9 @@ export class PlayerProgress {
     if (this.data.coins < cost) return false;
 
     this.data.coins -= cost;
-    this.data.unlockedCats.push(skinId);
+    const catSet = new Set(this.data.unlockedCats || ['ginger']);
+    catSet.add(skinId);
+    this.data.unlockedCats = Array.from(catSet);
     this.data.selectedCat = skinId;
     return true;
   }

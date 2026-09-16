@@ -55,10 +55,16 @@ export class SaveService {
         return new PlayerProgress();
       }
 
-      // Безопасная миграция полей рекордов
+      // Безопасная миграция полей рекордов и котиков
       if (!parsed.bestTimeMsPerLevel) parsed.bestTimeMsPerLevel = {};
       if (!parsed.bestComboPerLevel) parsed.bestComboPerLevel = {};
       if (!parsed.bestScorePerLevel) parsed.bestScorePerLevel = {};
+      if (!Array.isArray(parsed.unlockedCats) || parsed.unlockedCats.length === 0) {
+        parsed.unlockedCats = ['ginger'];
+        if (parsed.selectedCat && parsed.selectedCat !== 'ginger') {
+          parsed.unlockedCats.push(parsed.selectedCat);
+        }
+      }
       parsed.saveVersion = PlayerProgress.CURRENT_SAVE_VERSION;
 
       const progress = new PlayerProgress(parsed);
