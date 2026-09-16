@@ -286,6 +286,7 @@ export class CatRenderer {
     this.drawEars(ctx, radius, palette, skinId, direction);
 
     // 3. Тело и голова с мягким кавайным силуэтом (пухлые щёчки и градиент шерсти)
+    ctx.save();
     let bodyFill: string | CanvasGradient = palette.body;
     try {
       const grad = ctx.createRadialGradient(
