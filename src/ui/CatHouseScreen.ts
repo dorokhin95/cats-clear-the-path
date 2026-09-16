@@ -2,10 +2,12 @@ import { IScreen } from './ScreenManager';
 import { PlayerProgress } from '../progression/PlayerProgress';
 import { CatCollection } from '../progression/CatCollection';
 import { CatRenderer } from '../rendering/CatRenderer';
+import { SaveService } from '../services/SaveService';
 
 export interface CatHouseCallbacks {
   onBack: () => void;
   onPetCat?: () => void;
+  onRewardCoins?: (amount: number) => void;
 }
 
 interface HouseSpot {
@@ -16,17 +18,17 @@ interface HouseSpot {
   zIndex: number;
 }
 
-// 9 уютных мест для котиков в комнате (адаптировано под экраны любой ширины)
+// 9 уютных мест для котиков в богатой комнате Домика
 const HOUSE_SPOTS: HouseSpot[] = [
-  { bottom: 24, left: '42%', zIndex: 10 },  // 1. На центральном ковре
-  { bottom: 42, left: '7%', zIndex: 9 },    // 2. На кресле слева
-  { bottom: 38, right: '7%', zIndex: 9 },   // 3. Возле когтеточки справа
-  { top: 56, left: '26%', zIndex: 6 },      // 4. Под окошком
-  { top: 56, right: '22%', zIndex: 6 },     // 5. Рядом с цветком
-  { bottom: 95, left: '22%', zIndex: 8 },   // 6. На подушке
-  { bottom: 90, right: '22%', zIndex: 8 },  // 7. Возле мисочки
-  { bottom: 12, left: '20%', zIndex: 11 },  // 8. На коврике спереди слева
-  { bottom: 12, right: '28%', zIndex: 11 }  // 9. Играет с клубком справа
+  { bottom: 22, left: '44%', zIndex: 10 },   // 1. На мягком круглом ковре по центру
+  { bottom: 58, left: '25%', zIndex: 8 },    // 2. На большом мягком диване
+  { bottom: 142, right: '7%', zIndex: 9 },   // 3. На верхней площадке кошачьего дерева-когтеточки
+  { top: 74, left: '16%', zIndex: 7 },       // 4. На подоконнике у окошка
+  { bottom: 102, left: '4%', zIndex: 8 },    // 5. На средней полочке книжного шкафа
+  { bottom: 20, right: '14%', zIndex: 11 },  // 6. В уютной коробке "Для котика" 📦
+  { bottom: 82, left: '54%', zIndex: 8 },    // 7. На подушке рядом с диваном
+  { bottom: 86, right: '30%', zIndex: 8 },   // 8. Возле двойной мисочки с едой
+  { bottom: 12, left: '22%', zIndex: 11 }    // 9. Играет с клубком шерстяных ниток спереди
 ];
 
 export class CatHouseScreen implements IScreen {
@@ -44,9 +46,10 @@ export class CatHouseScreen implements IScreen {
     const screen = document.createElement('div');
     screen.className = 'ui-screen ui-screen--opaque';
     screen.id = 'screen-cat-house';
-    screen.style.padding = '20px';
-    screen.style.justifyContent = 'space-between';
+    screen.style.padding = '16px 20px';
+    screen.style.justifyContent = 'flex-start';
     screen.style.alignItems = 'center';
+    screen.style.gap = '10px';
     screen.style.overflowY = 'auto';
 
     screen.innerHTML = `
@@ -54,22 +57,43 @@ export class CatHouseScreen implements IScreen {
       <div style="width: 100%; display: flex; justify-content: space-between; align-items: center;">
         <button id="btnCatHouseBack" class="btn btn-icon" title="Назад">🏠</button>
         <h2 class="title-medium" style="margin: 0; font-size: 24px;">ДОМИК КОТИКОВ</h2>
-        <div style="width: 48px;"></div>
+        <div style="display: flex; align-items: center; gap: 6px; background: white; padding: 6px 14px; border-radius: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); font-weight: 700;">
+          <span>💰</span>
+          <span id="catHouseCoinBalance">${this.progress.getCoins()}</span>
+        </div>
       </div>
 
-      <!-- Баннер следующей цели мета-прогресса -->
-      <div id="houseMilestoneBanner" style="width: 100%; background: white; padding: 10px 16px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); text-align: center;">
-        <!-- Текст прогресса -->
+      <!-- Счётчик «Наглаженности» котиков -->
+      <div id="petLoveWidget" style="width: 100%; background: linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%); border: 2px solid #FFCDD2; border-radius: 18px; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(239, 83, 80, 0.12); position: relative; overflow: hidden;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="font-size: 30px; animation: bounce 1.8s infinite;">❤️</div>
+          <div style="display: flex; flex-direction: column;">
+            <span style="font-size: 15px; font-weight: 800; color: #C62828;">
+              Наглаженность: <span id="petCountValue">${this.progress.getPetCount()}</span> 🐾
+            </span>
+            <span id="petRankValue" style="font-size: 12px; font-weight: 700; color: #E53935;">
+              ${this.progress.getPetRank().icon} Ранг: ${this.progress.getPetRank().rankName}
+            </span>
+          </div>
+        </div>
+        <div style="text-align: right; font-size: 11px; font-weight: 700; color: #8E24AA; background: rgba(255,255,255,0.85); padding: 4px 8px; border-radius: 10px; border: 1px solid #E1BEE7;">
+          ✨ Каждые 15 ласк = +5 💰!
+        </div>
       </div>
 
-      <!-- Визуальная комната домика котиков -->
-      <div id="houseRoomView" style="position: relative; width: 100%; height: 380px; background: linear-gradient(180deg, #FDEED9 0%, #F5E0C3 68%, #D8BE9B 68%, #C9AE89 100%); border-radius: 24px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.06); overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; align-items: center;">
+      <!-- Баннер целей мета-прогресса и жильцов -->
+      <div id="houseMilestoneBanner" style="width: 100%; background: white; padding: 8px 14px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); text-align: center;">
+        <!-- Динамический текст прогресса -->
+      </div>
+
+      <!-- Визуальная комната домика котиков с богатым интерьером -->
+      <div id="houseRoomView" style="position: relative; width: 100%; height: 390px; background: linear-gradient(180deg, #FDEED9 0%, #F5DEC0 66%, #C8A882 66%, #B7946B 68%, #C9AE89 100%); border-radius: 24px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.08); overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; align-items: center;">
         <!-- Объекты комнаты генерируются динамически -->
       </div>
 
       <!-- Подсказка -->
-      <p style="color: var(--color-text-muted); font-size: 15px; font-weight: 500; text-align: center;">
-        Тапните по котику, чтобы погладить его! ✨
+      <p style="color: var(--color-text-muted); font-size: 14px; font-weight: 600; text-align: center; margin: 2px 0;">
+        Тапните по любому котику, чтобы погладить его! ✨
       </p>
 
       <!-- Нижняя кнопка возврата -->
@@ -98,6 +122,16 @@ export class CatHouseScreen implements IScreen {
     const completedLevels = this.progress.getHighestCompletedLevel();
     const banner = this.element.querySelector('#houseMilestoneBanner');
     const room = this.element.querySelector('#houseRoomView') as HTMLElement;
+    const coinEl = this.element.querySelector('#catHouseCoinBalance');
+    const petCountEl = this.element.querySelector('#petCountValue');
+    const petRankEl = this.element.querySelector('#petRankValue');
+
+    if (coinEl) coinEl.textContent = `${this.progress.getCoins()}`;
+    if (petCountEl) petCountEl.textContent = `${this.progress.getPetCount()}`;
+    if (petRankEl) {
+      const rank = this.progress.getPetRank();
+      petRankEl.textContent = `${rank.icon} Ранг: ${rank.rankName}`;
+    }
 
     if (!banner || !room) return;
 
@@ -113,15 +147,15 @@ export class CatHouseScreen implements IScreen {
     // 1. Информационный баннер
     let furnitureGoal = '';
     if (completedLevels < 10) {
-      furnitureGoal = `🛋️ Мягкое кресло откроется на 10 уровне (ещё ${10 - completedLevels})`;
-    } else if (completedLevels < 30) {
-      furnitureGoal = `🪵 Когтеточка откроется на 30 уровне (ещё ${30 - completedLevels})`;
+      furnitureGoal = `🛋️ Королевский диван откроется на 10 уровне (ещё ${10 - completedLevels})`;
+    } else if (completedLevels < 25) {
+      furnitureGoal = `🪵 Кошачье дерево-когтеточка откроется на 25 уровне (ещё ${25 - completedLevels})`;
     } else {
       furnitureGoal = `🌸 Комната полностью обставлена и наполнена уютом!`;
     }
 
     banner.innerHTML = `
-      <div style="display: flex; flex-direction: column; gap: 4px;">
+      <div style="display: flex; flex-direction: column; gap: 3px;">
         <span style="font-size: 15px; font-weight: 800; color: var(--color-accent-orange);">
           🐾 В домике живут: ${unlockedCount} из ${totalSkins.length} котиков!
         </span>
@@ -131,49 +165,120 @@ export class CatHouseScreen implements IScreen {
       </div>
     `;
 
-    // 2. Отрисовка интерьера комнаты
+    // 2. Отрисовка богатого интерьера комнаты
     room.innerHTML = `
-      <!-- Окно на заднем плане -->
-      <div style="position: absolute; top: 16px; left: 36px; width: 68px; height: 84px; background: #C8E6C9; border: 4px solid white; border-radius: 32px 32px 6px 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); display: flex; align-items: center; justify-content: center; font-size: 26px;">
+      <!-- Уютная гирлянда под потолком комнаты -->
+      <div style="position: absolute; top: 0; left: 0; width: 100%; height: 26px; display: flex; justify-content: space-around; align-items: center; font-size: 15px; opacity: 0.85; pointer-events: none; z-index: 5;">
+        <span>🏮</span><span>✨</span><span>🚩</span><span>🏮</span><span>✨</span><span>🚩</span><span>🏮</span><span>✨</span><span>🚩</span><span>🏮</span>
+      </div>
+
+      <!-- Окно со шторками и подоконником -->
+      <div style="position: absolute; top: 22px; left: 32px; width: 68px; height: 86px; background: #C8E6C9; border: 4px solid white; border-radius: 32px 32px 6px 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); display: flex; align-items: center; justify-content: center; font-size: 26px; z-index: 2;">
         ☀️
       </div>
-
-      <!-- Цветок на стене -->
-      <div style="position: absolute; top: 22px; right: 36px; font-size: 34px;">
-        🪴
-      </div>
+      <!-- Шторки у окна -->
+      <div style="position: absolute; top: 20px; left: 24px; width: 14px; height: 75px; background: #FFCCBC; border-radius: 6px 0 0 12px; box-shadow: 1px 2px 5px rgba(0,0,0,0.1); z-index: 3;"></div>
+      <div style="position: absolute; top: 20px; left: 98px; width: 14px; height: 75px; background: #FFCCBC; border-radius: 0 6px 12px 0; box-shadow: -1px 2px 5px rgba(0,0,0,0.1); z-index: 3;"></div>
+      <!-- Деревянный подоконник -->
+      <div style="position: absolute; top: 106px; left: 20px; width: 96px; height: 8px; background: #8D6E63; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.15); z-index: 3;"></div>
 
       <!-- Картина с рыбкой на стене -->
-      <div style="position: absolute; top: 18px; left: 135px; background: white; padding: 4px 8px; border-radius: 8px; font-size: 18px; box-shadow: 0 2px 6px rgba(0,0,0,0.08);">
+      <div style="position: absolute; top: 24px; left: 132px; background: #FFF8E1; border: 3px solid #D7CCC8; padding: 4px 8px; border-radius: 8px; font-size: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); z-index: 2;">
         🐟
       </div>
 
-      <!-- Мебель: Кресло (с 10 уровня) -->
-      ${
-        completedLevels >= 10
-          ? `<div style="position: absolute; bottom: 35px; left: 18px; font-size: 60px; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.15)); z-index: 4;">🛋️</div>`
-          : `<div style="position: absolute; bottom: 42px; left: 24px; font-size: 36px; opacity: 0.25; filter: grayscale(1); z-index: 4;" title="Откроется на 10 уровне">🛋️</div>`
-      }
-
-      <!-- Мебель: Когтеточка (с 30 уровня) -->
-      ${
-        completedLevels >= 30
-          ? `<div style="position: absolute; bottom: 35px; right: 20px; font-size: 56px; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.15)); z-index: 4;">🪵</div>`
-          : `<div style="position: absolute; bottom: 42px; right: 28px; font-size: 34px; opacity: 0.25; filter: grayscale(1); z-index: 4;" title="Откроется на 30 уровне">🪵</div>`
-      }
-
-      <!-- Мисочка с молоком -->
-      <div style="position: absolute; bottom: 78px; right: 88px; font-size: 20px; z-index: 5;">
-        🥛
+      <!-- НАСТЕННАЯ ДЕРЕВЯННАЯ ПОЛКА ДЛЯ ЦВЕТКА И КНИГ (Цветок больше не в воздухе!) -->
+      <div style="position: absolute; top: 20px; right: 28px; width: 90px; z-index: 3; display: flex; flex-direction: column; align-items: center;">
+        <!-- Предметы на полке: цветок и книги -->
+        <div style="display: flex; align-items: flex-end; justify-content: space-around; width: 100%; margin-bottom: -4px;">
+          <span style="font-size: 32px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));" title="Комнатный цветок">🪴</span>
+          <span style="font-size: 20px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));" title="Книги">📚</span>
+        </div>
+        <!-- Сама деревянная полка -->
+        <div style="width: 100%; height: 9px; background: #8D6E63; border-radius: 4px; box-shadow: 0 3px 6px rgba(0,0,0,0.2); border-bottom: 2px solid #5D4037;"></div>
+        <!-- Кронштейны под полкой -->
+        <div style="display: flex; justify-content: space-between; width: 75%; height: 8px;">
+          <div style="width: 5px; height: 8px; background: #5D4037; border-radius: 0 0 2px 2px;"></div>
+          <div style="width: 5px; height: 8px; background: #5D4037; border-radius: 0 0 2px 2px;"></div>
+        </div>
       </div>
 
-      <!-- Клубок ниток -->
-      <div style="position: absolute; bottom: 10px; right: 110px; font-size: 18px; z-index: 5;">
+      <!-- КНИЖНЫЙ ШКАФ-СТЕЛЛАЖ СЛЕВА -->
+      <div style="position: absolute; bottom: 38px; left: 12px; width: 78px; height: 165px; background: #BCAAA4; border: 3px solid #6D4C41; border-radius: 10px 10px 0 0; box-shadow: 2px 4px 12px rgba(0,0,0,0.14); display: flex; flex-direction: column; justify-content: space-between; padding: 4px 6px; z-index: 4;">
+        <!-- Верхняя полка: книги и мышка -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; height: 42px; border-bottom: 3px solid #6D4C41;">
+          <span style="font-size: 18px;">📚</span>
+          <span style="font-size: 14px;">🐁</span>
+        </div>
+        <!-- Средняя полка: место для котика и клубочка -->
+        <div style="display: flex; justify-content: space-around; align-items: flex-end; height: 50px; border-bottom: 3px solid #6D4C41;">
+          <span style="font-size: 16px;">🧶</span>
+        </div>
+        <!-- Нижняя полка: фигурка рыбки и кристалл -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; height: 42px;">
+          <span style="font-size: 16px;">💎</span>
+          <span style="font-size: 16px;">📖</span>
+        </div>
+      </div>
+
+      <!-- БОЛЬШОЙ МЯГКИЙ ВЕЛЮРОВЫЙ ДИВАН (с 10 уровня или декор) -->
+      ${
+        completedLevels >= 10
+          ? `
+          <div style="position: absolute; bottom: 36px; left: 88px; width: 120px; height: 68px; background: #A5D6A7; border: 3px solid #66BB6A; border-radius: 16px 16px 8px 8px; box-shadow: 0 6px 14px rgba(0,0,0,0.12); display: flex; flex-direction: column; justify-content: space-between; padding: 4px 6px; z-index: 5;" title="Уютный диван">
+            <div style="display: flex; justify-content: space-between; font-size: 18px; margin-top: 2px;">
+              <span>🟡</span><span>🟠</span>
+            </div>
+            <div style="width: 100%; height: 22px; background: #81C784; border-radius: 8px;"></div>
+          </div>
+          `
+          : `
+          <div style="position: absolute; bottom: 36px; left: 88px; width: 110px; height: 62px; border: 2px dashed #BDBDBD; border-radius: 16px; opacity: 0.45; display: flex; align-items: center; justify-content: center; font-size: 26px; z-index: 5;" title="Откроется на 10 уровне">
+            🛋️
+          </div>
+          `
+      }
+
+      <!-- КОШАЧЬЕ ДЕРЕВО-КОГТЕТОЧКА С ЛЕЖАНКОЙ СПРАВА (с 25 уровня) -->
+      ${
+        completedLevels >= 25
+          ? `
+          <div style="position: absolute; bottom: 36px; right: 14px; width: 72px; height: 145px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; z-index: 5;" title="Кошачье дерево">
+            <!-- Верхняя круглая лежанка -->
+            <div style="width: 68px; height: 26px; background: #FFE0B2; border: 3px solid #FFB74D; border-radius: 50%; box-shadow: 0 4px 8px rgba(0,0,0,0.12); display: flex; align-items: center; justify-content: center;">
+              <span style="font-size: 10px; font-weight: 800; color: #E65100;">КОТИК</span>
+            </div>
+            <!-- Сизалевый столб когтеточки -->
+            <div style="width: 16px; height: 95px; background: repeating-linear-gradient(0deg, #D7CCC8, #D7CCC8 4px, #BCAAA4 4px, #BCAAA4 8px); border: 2px solid #8D6E63; border-radius: 4px;"></div>
+            <!-- Нижнее основание -->
+            <div style="width: 64px; height: 12px; background: #8D6E63; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.15);"></div>
+          </div>
+          `
+          : `
+          <div style="position: absolute; bottom: 36px; right: 18px; width: 64px; height: 75px; border: 2px dashed #BDBDBD; border-radius: 12px; opacity: 0.45; display: flex; align-items: center; justify-content: center; font-size: 26px; z-index: 5;" title="Откроется на 25 уровне">
+            🪵
+          </div>
+          `
+      }
+
+      <!-- КАРТОННАЯ КОРОБКА ДЛЯ КОТИКА СПРАВА ВНИЗУ 📦 -->
+      <div style="position: absolute; bottom: 12px; right: 48px; width: 64px; height: 40px; background: #D7CCC8; border: 2px solid #A1887F; border-radius: 6px; box-shadow: 0 3px 8px rgba(0,0,0,0.12); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 6;" title="Коробка счастья">
+        <span style="font-size: 9px; font-weight: 800; color: #5D4037;">📦 МЯУ</span>
+      </div>
+
+      <!-- ДВОЙНАЯ МИСОЧКА (МОЛОКО + РЫБКА) -->
+      <div style="position: absolute; bottom: 78px; right: 105px; background: white; padding: 2px 6px; border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 4px; z-index: 6;">
+        <span style="font-size: 16px;" title="Молочко">🥛</span>
+        <span style="font-size: 16px;" title="Рыбка">🐟</span>
+      </div>
+
+      <!-- Клубок шерсти с ниточкой слева спереди -->
+      <div style="position: absolute; bottom: 8px; left: 88px; font-size: 20px; z-index: 7; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));" title="Игрушечный клубок">
         🧶
       </div>
 
-      <!-- Уютный большой круглый ковер -->
-      <div style="position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); width: 190px; height: 56px; background: #FDE8D0; border: 3px dashed #E8CDB0; border-radius: 50%; z-index: 3;"></div>
+      <!-- БОЛЬШОЙ МЯГКИЙ КРУГЛЫЙ КОВЕР В ЦЕНТРЕ КОМНАТЫ -->
+      <div style="position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); width: 220px; height: 68px; background: radial-gradient(ellipse at center, #FFF3E0 0%, #FFE0B2 75%, #FFCC80 100%); border: 3px dashed #FFA726; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.06); z-index: 3;"></div>
     `;
 
     // 3. Размещение всех купленных котиков
@@ -186,6 +291,8 @@ export class CatHouseScreen implements IScreen {
       const isSelected = this.progress.getSelectedCat() === catSkinId;
 
       const catContainer = document.createElement('div');
+      catContainer.className = 'house-cat-figure';
+      catContainer.dataset.catId = catSkinId;
       catContainer.style.position = 'absolute';
       catContainer.style.zIndex = `${spot.zIndex}`;
       catContainer.style.cursor = 'pointer';
@@ -226,10 +333,33 @@ export class CatHouseScreen implements IScreen {
       label.style.pointerEvents = 'none';
       catContainer.appendChild(label);
 
-      // Интерактивное поглаживание
+      // Интерактивное поглаживание котика
       catContainer.addEventListener('click', (e) => {
         e.stopPropagation();
 
+        // 1. Инкремент счётчика наглаженности и получение бонусов
+        const petResult = this.progress.incrementPetCount();
+        SaveService.save(this.progress);
+
+        // 2. Обновление счётчика на экране
+        const pVal = this.element?.querySelector('#petCountValue');
+        const rVal = this.element?.querySelector('#petRankValue');
+        const cVal = this.element?.querySelector('#catHouseCoinBalance');
+        if (pVal) pVal.textContent = `${petResult.newCount}`;
+        if (rVal) {
+          const rank = this.progress.getPetRank();
+          rVal.textContent = `${rank.icon} Ранг: ${rank.rankName}`;
+        }
+        if (cVal) cVal.textContent = `${this.progress.getCoins()}`;
+
+        // 3. Вызов коллбэков (звук мурлыканья и награда монетками)
+        this.callbacks.onPetCat?.();
+        if (petResult.rewardCoins > 0) {
+          this.callbacks.onRewardCoins?.(petResult.rewardCoins);
+          this.showToastBonus(`✨ Муррр! Спасибо за ласку: +${petResult.rewardCoins} 💰! ✨`);
+        }
+
+        // 4. Анимация подпрыгивания и всплывающих сердечек
         if (!reducedMotion) {
           catContainer.style.transform = 'scale(1.25) translateY(-8px)';
           setTimeout(() => {
@@ -238,7 +368,7 @@ export class CatHouseScreen implements IScreen {
 
           // Всплывающее сердечко ❤️
           const heart = document.createElement('div');
-          heart.textContent = '❤️';
+          heart.textContent = petResult.rewardCoins > 0 ? '💖' : '❤️';
           heart.style.position = 'absolute';
           heart.style.left = '26px';
           heart.style.top = '-20px';
@@ -257,12 +387,38 @@ export class CatHouseScreen implements IScreen {
             heart.remove();
           }, 700);
         }
-
-        this.callbacks.onPetCat?.();
       });
 
       room.appendChild(catContainer);
     });
+  }
+
+  private showToastBonus(text: string): void {
+    if (!this.element) return;
+    const toast = document.createElement('div');
+    toast.textContent = text;
+    toast.style.position = 'absolute';
+    toast.style.top = '120px';
+    toast.style.left = '50%';
+    toast.style.transform = 'translateX(-50%)';
+    toast.style.background = 'linear-gradient(135deg, #FF9800, #F57C00)';
+    toast.style.color = 'white';
+    toast.style.fontWeight = '800';
+    toast.style.fontSize = '14px';
+    toast.style.padding = '8px 18px';
+    toast.style.borderRadius = '20px';
+    toast.style.boxShadow = '0 6px 18px rgba(245, 124, 0, 0.35)';
+    toast.style.zIndex = '100';
+    toast.style.pointerEvents = 'none';
+    toast.style.transition = 'all 0.4s ease';
+
+    this.element.appendChild(toast);
+
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateX(-50%) translateY(-15px)';
+      setTimeout(() => toast.remove(), 400);
+    }, 1500);
   }
 
   public show(): void {
@@ -283,3 +439,4 @@ export class CatHouseScreen implements IScreen {
     this.renderHouse();
   }
 }
+

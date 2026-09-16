@@ -300,6 +300,10 @@ async function initApp(): Promise<void> {
     },
     onPetCat: () => {
       audioManager.playCatEscape();
+    },
+    onRewardCoins: (_amount) => {
+      audioManager.playCoin();
+      updateCoinsDisplay();
     }
   });
 

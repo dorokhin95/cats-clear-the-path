@@ -13,6 +13,7 @@ export interface PlayerData {
   bestTimeMsPerLevel: Record<number, number>;
   bestComboPerLevel: Record<number, number>;
   bestScorePerLevel: Record<number, number>;
+  petCount?: number;
 }
 
 export class PlayerProgress {
@@ -28,6 +29,7 @@ export class PlayerProgress {
       unlockedCats: ['ginger'],
       selectedCat: 'ginger',
       remainingHints: 3,
+      petCount: 0,
       settings: {
         musicVolume: 0.7,
         sfxVolume: 0.8,
@@ -214,5 +216,29 @@ export class PlayerProgress {
 
   public setTutorialCompleted(completed: boolean): void {
     this.data.tutorialCompleted = completed;
+  }
+
+  public getPetCount(): number {
+    return this.data.petCount || 0;
+  }
+
+  public incrementPetCount(): { newCount: number; rewardCoins: number } {
+    this.data.petCount = (this.data.petCount || 0) + 1;
+    let rewardCoins = 0;
+    // Каждые 15 поглаживаний котики дарят игроку 5 монеток
+    if (this.data.petCount % 15 === 0) {
+      rewardCoins = 5;
+      this.addCoins(rewardCoins);
+    }
+    return { newCount: this.data.petCount, rewardCoins };
+  }
+
+  public getPetRank(): { rankName: string; icon: string; nextThreshold: number } {
+    const count = this.getPetCount();
+    if (count < 10) return { rankName: 'Знакомый котиков', icon: '🐾', nextThreshold: 10 };
+    if (count < 30) return { rankName: 'Друг пушистиков', icon: '🧶', nextThreshold: 30 };
+    if (count < 60) return { rankName: 'Любимый хозяин', icon: '💖', nextThreshold: 60 };
+    if (count < 100) return { rankName: 'Мастер поглаживаний', icon: '👑', nextThreshold: 100 };
+    return { rankName: 'Повелитель мурлыканья', icon: '🌟', nextThreshold: 1000000 };
   }
 }

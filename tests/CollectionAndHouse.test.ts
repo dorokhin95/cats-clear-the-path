@@ -128,4 +128,38 @@ describe('CatCollection & CatHouse Progression', () => {
 
     expect(mascotTag?.textContent).toContain('Космонавт');
   });
+
+  it('CatHouseScreen отслеживает наглаженность котиков и начисляет награды за ласку', async () => {
+    const { CatHouseScreen } = await import('../src/ui/CatHouseScreen');
+    const container = document.createElement('div');
+    let rewardedAmount = 0;
+    const house = new CatHouseScreen(progress, {
+      onBack: () => {},
+      onPetCat: () => {},
+      onRewardCoins: (amount) => {
+        rewardedAmount += amount;
+      }
+    });
+    house.mount(container);
+
+    expect(progress.getPetCount()).toBe(0);
+    expect(progress.getPetRank().rankName).toBe('Знакомый котиков');
+
+    const catContainer = container.querySelector('.house-cat-figure') as HTMLElement;
+    expect(catContainer).toBeTruthy();
+
+    // Тапаем по котику 15 раз
+    for (let i = 0; i < 15; i++) {
+      catContainer.click();
+    }
+
+    expect(progress.getPetCount()).toBe(15);
+    expect(progress.getPetRank().rankName).toBe('Друг пушистиков');
+    // Получена награда 5 монет за 15 поглаживаний
+    expect(rewardedAmount).toBe(5);
+    expect(progress.getCoins()).toBe(5);
+
+    const petCountVal = container.querySelector('#petCountValue');
+    expect(petCountVal?.textContent).toBe('15');
+  });
 });

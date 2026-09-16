@@ -59,6 +59,7 @@ export class SaveService {
       if (!parsed.bestTimeMsPerLevel) parsed.bestTimeMsPerLevel = {};
       if (!parsed.bestComboPerLevel) parsed.bestComboPerLevel = {};
       if (!parsed.bestScorePerLevel) parsed.bestScorePerLevel = {};
+      if (typeof parsed.petCount !== 'number') parsed.petCount = 0;
       if (!Array.isArray(parsed.unlockedCats) || parsed.unlockedCats.length === 0) {
         parsed.unlockedCats = ['ginger'];
         if (parsed.selectedCat && parsed.selectedCat !== 'ginger') {
