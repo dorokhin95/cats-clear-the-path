@@ -2,6 +2,7 @@ import { IScreen } from './ScreenManager';
 import { PlayerProgress } from '../progression/PlayerProgress';
 import { CatCollection } from '../progression/CatCollection';
 import { CatRenderer } from '../rendering/CatRenderer';
+import { renderCoinIcon } from './CoinBadge';
 
 export interface MainMenuCallbacks {
   onPlay: () => void;
@@ -38,8 +39,8 @@ export class MainMenu implements IScreen {
     screen.innerHTML = `
       <!-- Верхний бар с балансом -->
       <div style="width: 100%; display: flex; justify-content: flex-end; align-items: center;">
-        <div style="display: flex; align-items: center; gap: 8px; background: white; padding: 8px 16px; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); font-weight: 700; font-size: 18px;">
-          <span>💰</span>
+        <div class="coin-pill" style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 18px;">
+          ${renderCoinIcon(22)}
           <span id="menuCoinBalance">0</span>
         </div>
       </div>

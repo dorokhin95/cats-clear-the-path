@@ -2,6 +2,7 @@ import { IScreen } from './ScreenManager';
 import { PlayerProgress } from '../progression/PlayerProgress';
 import { CatCollection, SkinDefinition } from '../progression/CatCollection';
 import { CatRenderer } from '../rendering/CatRenderer';
+import { renderCoinIcon } from './CoinBadge';
 
 export interface CollectionCallbacks {
   onSelectCat: (skinId: string) => void;
@@ -35,8 +36,8 @@ export class CollectionScreen implements IScreen {
       <div style="width: 100%; display: flex; justify-content: space-between; align-items: center;">
         <button id="btnCollectionBack" class="btn btn-icon" title="Назад">🏠</button>
         <h2 class="title-medium" style="margin: 0; font-size: 24px;">МОИ КОТИКИ</h2>
-        <div style="display: flex; align-items: center; gap: 6px; background: white; padding: 6px 14px; border-radius: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); font-weight: 700;">
-          <span>💰</span>
+        <div class="coin-pill" style="display: flex; align-items: center; gap: 6px; font-weight: 700;">
+          ${renderCoinIcon(20)}
           <span id="collectionCoinBalance">0</span>
         </div>
       </div>
@@ -148,9 +149,9 @@ export class CollectionScreen implements IScreen {
             btn.style.boxShadow = 'none';
             btn.style.cursor = 'not-allowed';
           }
-          btn.style.padding = '8px 12px';
+          btn.style.padding = '8px 14px';
           btn.style.fontSize = '14px';
-          btn.innerHTML = `${skin.cost} 🪙`;
+          btn.innerHTML = `<span style="display: inline-flex; align-items: center; gap: 5px;">${skin.cost} ${renderCoinIcon(16)}</span>`;
           if (canAfford) {
             btn.addEventListener('click', () => {
               this.callbacks.onBuyCat(skin);

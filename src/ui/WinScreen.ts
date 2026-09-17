@@ -1,5 +1,6 @@
 import { ScreenManager } from './ScreenManager';
 import { LevelResult } from '../game/GameRules';
+import { renderCoinIcon } from './CoinBadge';
 
 export interface WinScreenCallbacks {
   onNextLevel: () => void;
@@ -31,20 +32,20 @@ export class WinScreen {
 
   public mount(container: HTMLElement): void {
     const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
+    modal.className = 'ui-modal';
     modal.id = this.modalId;
 
     modal.innerHTML = `
-      <div class="modal-content" style="max-width: 360px; text-align: center; gap: 14px;">
-        <h2 class="title-large" style="color: var(--color-primary-green); font-size: 26px; line-height: 1.2; margin: 0;">
+      <div class="ui-modal__content" style="max-width: 320px; width: 90%; text-align: center; gap: 14px; padding: 24px;">
+        <h2 class="title-large" style="color: var(--color-primary-green); margin: 0; font-size: 28px;">
           УРОВЕНЬ ПРОЙДЕН!
         </h2>
 
-        <!-- Звёзды с поочередным появлением -->
-        <div id="winStarsContainer" style="display: flex; justify-content: center; gap: 12px; font-size: 42px; margin: 2px 0;">
-          <span id="winStar1" style="transform: scale(0); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">⭐</span>
-          <span id="winStar2" style="transform: scale(0); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); margin-top: -10px;">⭐</span>
-          <span id="winStar3" style="transform: scale(0); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">⭐</span>
+        <!-- Звезды -->
+        <div id="winStarsContainer" style="display: flex; justify-content: center; gap: 8px; font-size: 32px;">
+          <span id="winStar1" class="win-star" style="opacity: 0.2; transform: scale(0.8); transition: all 300ms cubic-bezier(0.34, 1.56, 0.64, 1);">⭐</span>
+          <span id="winStar2" class="win-star" style="opacity: 0.2; transform: scale(0.8); transition: all 300ms cubic-bezier(0.34, 1.56, 0.64, 1);">⭐</span>
+          <span id="winStar3" class="win-star" style="opacity: 0.2; transform: scale(0.8); transition: all 300ms cubic-bezier(0.34, 1.56, 0.64, 1);">⭐</span>
         </div>
 
         <!-- Подробная статистика прохождения (п. 5 и п. 17 ТЗ) -->
@@ -71,12 +72,12 @@ export class WinScreen {
         <div style="display: flex; align-items: center; justify-content: center; gap: 8px; background: #FFF4DE; padding: 8px 20px; border-radius: 20px; font-weight: 800; font-size: 22px; color: var(--color-accent-orange); box-shadow: 0 2px 8px rgba(255, 184, 77, 0.2);">
           <span>+</span>
           <span id="winCoinsAmount">20</span>
-          <span>🪙</span>
+          ${renderCoinIcon(24)}
         </div>
 
         <!-- Кнопка удвоения за рекламу (скрывается если реклама недоступна) -->
         <button id="btnWinDoubleReward" class="btn btn-accent" style="width: 100%; font-size: 16px; padding: 10px; display: none;">
-          🎬 УДВОИТЬ НАГРАДУ (x2 🪙)
+          🎬 УДВОИТЬ НАГРАДУ (x2 ${renderCoinIcon(18)})
         </button>
 
         <!-- Кнопки действий -->
@@ -135,7 +136,7 @@ export class WinScreen {
     if (doubleBtn) {
       if (hasRewardedAds) {
         doubleBtn.style.display = 'block';
-        doubleBtn.textContent = '🎬 УДВОИТЬ НАГРАДУ (x2 🪙)';
+        doubleBtn.innerHTML = `🎬 УДВОИТЬ НАГРАДУ (x2 <span style="display:inline-flex; vertical-align:middle; margin-left:2px;">${renderCoinIcon(18)}</span>)`;
         doubleBtn.disabled = false;
         doubleBtn.style.opacity = '1';
       } else {

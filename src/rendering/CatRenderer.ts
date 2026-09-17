@@ -150,6 +150,90 @@ const PALETTES: Record<string, SkinPalette> = {
     muzzle: '#FFFFFF',
     whiskers: '#78909C',
     paws: '#FFFFFF'
+  },
+  bunny: {
+    body: '#FFF8F0',
+    bodyLight: '#FFFFFF',
+    bodyDark: '#F0E5DE',
+    stroke: '#D7CCC8',
+    earsInner: '#FF80AB',
+    eyes: '#AD1457',
+    eyesPupil: '#4A148C',
+    eyesGlint: '#F48FB1',
+    blush: 'rgba(255, 128, 171, 0.35)',
+    muzzle: '#FFFFFF',
+    whiskers: '#BDBDBD',
+    paws: '#FFFFFF'
+  },
+  flower: {
+    body: '#FFE082',
+    bodyLight: '#FFF9C4',
+    bodyDark: '#FFCA28',
+    stroke: '#FFA000',
+    earsInner: '#FFCDD2',
+    eyes: '#2E7D32',
+    eyesPupil: '#1B5E20',
+    eyesGlint: '#81C784',
+    blush: 'rgba(255, 138, 101, 0.35)',
+    muzzle: '#FFFDE7',
+    whiskers: '#BF360C',
+    paws: '#FFFDE7'
+  },
+  frog: {
+    body: '#C8E6C9',
+    bodyLight: '#E8F5E9',
+    bodyDark: '#A5D6A7',
+    stroke: '#43A047',
+    earsInner: '#81C784',
+    eyes: '#E65100',
+    eyesPupil: '#BF360C',
+    eyesGlint: '#FFB74D',
+    blush: 'rgba(76, 175, 80, 0.25)',
+    muzzle: '#F1F8E9',
+    whiskers: '#2E7D32',
+    paws: '#FFFFFF'
+  },
+  winter: {
+    body: '#CFD8DC',
+    bodyLight: '#ECEFF1',
+    bodyDark: '#B0BEC5',
+    stroke: '#78909C',
+    earsInner: '#FFCDD2',
+    eyes: '#1565C0',
+    eyesPupil: '#0D47A1',
+    eyesGlint: '#90CAF9',
+    blush: 'rgba(144, 202, 249, 0.35)',
+    muzzle: '#FFFFFF',
+    whiskers: '#607D8B',
+    paws: '#FFFFFF'
+  },
+  pumpkin: {
+    body: '#3E2723',
+    bodyLight: '#4E342E',
+    bodyDark: '#271815',
+    stroke: '#1B0000',
+    earsInner: '#D7CCC8',
+    eyes: '#FF9800',
+    eyesPupil: '#E65100',
+    eyesGlint: '#FFE082',
+    blush: 'rgba(255, 152, 0, 0.3)',
+    muzzle: '#5D4037',
+    whiskers: '#8D6E63',
+    paws: '#4E342E'
+  },
+  santa: {
+    body: '#FFF8E7',
+    bodyLight: '#FFFFFF',
+    bodyDark: '#F5E6CC',
+    stroke: '#A1887F',
+    earsInner: '#FFCDD2',
+    eyes: '#4E342E',
+    eyesPupil: '#271815',
+    eyesGlint: '#8D6E63',
+    blush: 'rgba(239, 83, 80, 0.35)',
+    muzzle: '#FFFFFF',
+    whiskers: '#8D6E63',
+    paws: '#FFFFFF'
   }
 };
 
@@ -700,7 +784,7 @@ export class CatRenderer {
     ctx: CanvasRenderingContext2D,
     radius: number,
     skinId: string,
-    _direction: Direction
+    direction: Direction
   ): void {
     // 🎩 Кот в шляпе (Hat): стильный котелок с алой лентой и золотой пряжкой
     if (skinId === 'hat') {
@@ -806,6 +890,282 @@ export class CatRenderer {
       ctx.beginPath();
       ctx.ellipse(0, radius * 0.92, radius * 0.72, radius * 0.16, 0, 0, Math.PI * 2);
       ctx.fill();
+
+      ctx.restore();
+    }
+
+    // 🐰 Котик-зайка (Bunny): пушистая шапочка с длинными кроличьими ушками
+    if (skinId === 'bunny') {
+      ctx.save();
+      let earOffset = 0;
+      if (direction === 'left') earOffset = -radius * 0.14;
+      if (direction === 'right') earOffset = radius * 0.14;
+      const headTopY = -radius * 0.72;
+
+      // Ободок шапочки
+      ctx.fillStyle = '#FFFFFF';
+      ctx.strokeStyle = '#D7CCC8';
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.ellipse(earOffset, headTopY, radius * 0.52, radius * 0.14, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // Длинные кроличьи ушки с розовой серединкой
+      const drawBunnyEar = (ox: number, tilt: number) => {
+        ctx.save();
+        ctx.translate(ox + earOffset, headTopY);
+        ctx.rotate(tilt);
+        // Белая пушистая основа
+        ctx.fillStyle = '#FFFFFF';
+        ctx.strokeStyle = '#D7CCC8';
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        ctx.ellipse(0, -radius * 0.52, radius * 0.16, radius * 0.52, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        // Розовая внутренняя часть
+        ctx.fillStyle = '#FF80AB';
+        ctx.beginPath();
+        ctx.ellipse(0, -radius * 0.5, radius * 0.09, radius * 0.38, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      };
+
+      drawBunnyEar(-radius * 0.26, -0.12);
+      drawBunnyEar(radius * 0.26, 0.12);
+      ctx.restore();
+    }
+
+    // 🌸 Цветочек (Flower): венок из ярких лепестков с листиком
+    if (skinId === 'flower') {
+      ctx.save();
+      const headTopY = -radius * 0.74;
+      let centerOffset = 0;
+      if (direction === 'left') centerOffset = -radius * 0.12;
+      if (direction === 'right') centerOffset = radius * 0.12;
+
+      // Зеленый листик сбоку
+      ctx.fillStyle = '#4CAF50';
+      ctx.strokeStyle = '#2E7D32';
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.ellipse(centerOffset + radius * 0.38, headTopY - radius * 0.08, radius * 0.18, radius * 0.09, 0.4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // Лепестки вокруг центра
+      const petalRadius = radius * 0.17;
+      const petals = 6;
+      ctx.fillStyle = '#FF80AB';
+      ctx.strokeStyle = '#F06292';
+      ctx.lineWidth = 1.4;
+      for (let i = 0; i < petals; i++) {
+        const angle = (i * Math.PI * 2) / petals;
+        const px = centerOffset + Math.cos(angle) * radius * 0.25;
+        const py = headTopY + Math.sin(angle) * radius * 0.18;
+        ctx.beginPath();
+        ctx.arc(px, py, petalRadius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      }
+
+      // Золотистая серединка цветка
+      ctx.fillStyle = '#FFD54F';
+      ctx.strokeStyle = '#FFA000';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(centerOffset, headTopY, radius * 0.18, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    // 🐸 Лягушонок (Frog): ярко-зеленая шапочка с выпуклыми круглыми глазками
+    if (skinId === 'frog') {
+      ctx.save();
+      const hatY = -radius * 0.7;
+      let shiftX = 0;
+      if (direction === 'left') shiftX = -radius * 0.1;
+      if (direction === 'right') shiftX = radius * 0.1;
+
+      // Зеленая основа шапочки
+      ctx.fillStyle = '#66BB6A';
+      ctx.strokeStyle = '#388E3C';
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.ellipse(shiftX, hatY, radius * 0.65, radius * 0.28, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // Выпуклые глазки лягушонка
+      const eyeR = radius * 0.19;
+      const eyeSpread = radius * 0.32;
+      const eyeY = hatY - radius * 0.22;
+
+      [-eyeSpread, eyeSpread].forEach((ex) => {
+        // Зеленое веко
+        ctx.fillStyle = '#66BB6A';
+        ctx.strokeStyle = '#388E3C';
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.arc(shiftX + ex, eyeY, eyeR, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Белок глаза
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.arc(shiftX + ex, eyeY, eyeR * 0.72, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Черный зрачок
+        ctx.fillStyle = '#212121';
+        ctx.beginPath();
+        ctx.arc(shiftX + ex, eyeY, eyeR * 0.38, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Блик
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.arc(shiftX + ex - eyeR * 0.18, eyeY - eyeR * 0.18, eyeR * 0.18, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      ctx.restore();
+    }
+
+    // 🧶 Зимний пушистик (Winter): тёплая вязаная шапка с помпоном
+    if (skinId === 'winter') {
+      ctx.save();
+      const hatY = -radius * 0.72;
+      let shiftX = 0;
+      if (direction === 'left') shiftX = -radius * 0.12;
+      if (direction === 'right') shiftX = radius * 0.12;
+
+      // Купол шапки
+      ctx.fillStyle = '#0288D1';
+      ctx.strokeStyle = '#01579B';
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.arc(shiftX, hatY - radius * 0.15, radius * 0.5, Math.PI, 0, false);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Узорная полоска
+      ctx.strokeStyle = '#B3E5FC';
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      ctx.arc(shiftX, hatY - radius * 0.15, radius * 0.36, Math.PI * 1.15, Math.PI * 1.85, false);
+      ctx.stroke();
+
+      // Белый пушистый отворот шапки
+      ctx.fillStyle = '#FFFFFF';
+      ctx.strokeStyle = '#B0BEC5';
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.ellipse(shiftX, hatY, radius * 0.58, radius * 0.16, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // Пушистый помпон
+      const pomX = shiftX;
+      const pomY = hatY - radius * 0.65;
+      const pomR = radius * 0.22;
+      ctx.fillStyle = '#FFFFFF';
+      ctx.strokeStyle = '#CFD8DC';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(pomX, pomY, pomR, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    // 🎃 Тыковка (Pumpkin): хэллоуинская тыквенная шапка с черенком
+    if (skinId === 'pumpkin') {
+      ctx.save();
+      const hatY = -radius * 0.74;
+      let shiftX = 0;
+      if (direction === 'left') shiftX = -radius * 0.1;
+      if (direction === 'right') shiftX = radius * 0.1;
+
+      // Тело тыквы
+      ctx.fillStyle = '#FF7043';
+      ctx.strokeStyle = '#D84315';
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.ellipse(shiftX, hatY, radius * 0.58, radius * 0.34, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // Дольки тыквы
+      ctx.strokeStyle = '#BF360C';
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.ellipse(shiftX, hatY, radius * 0.32, radius * 0.33, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Зеленый черенок тыквы
+      ctx.fillStyle = '#4CAF50';
+      ctx.strokeStyle = '#2E7D32';
+      ctx.lineWidth = 1.5;
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(shiftX - radius * 0.05, hatY - radius * 0.32);
+      ctx.quadraticCurveTo(shiftX + radius * 0.08, hatY - radius * 0.52, shiftX + radius * 0.14, hatY - radius * 0.56);
+      ctx.lineTo(shiftX + radius * 0.2, hatY - radius * 0.5);
+      ctx.quadraticCurveTo(shiftX + radius * 0.1, hatY - radius * 0.34, shiftX + radius * 0.05, hatY - radius * 0.32);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    // 🎅 Дед Мороз (Santa): новогодний алый колпак с меховой опушкой и помпоном
+    if (skinId === 'santa') {
+      ctx.save();
+      const hatY = -radius * 0.72;
+      let shiftX = 0;
+      if (direction === 'left') shiftX = -radius * 0.12;
+      if (direction === 'right') shiftX = radius * 0.12;
+
+      // Красный конус колпака
+      ctx.fillStyle = '#D32F2F';
+      ctx.strokeStyle = '#B71C1C';
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.moveTo(shiftX - radius * 0.45, hatY - radius * 0.05);
+      ctx.quadraticCurveTo(shiftX, hatY - radius * 0.75, shiftX + radius * 0.65, hatY - radius * 0.35);
+      ctx.quadraticCurveTo(shiftX + radius * 0.2, hatY - radius * 0.45, shiftX + radius * 0.45, hatY - radius * 0.05);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Белая меховая опушка
+      ctx.fillStyle = '#FFFFFF';
+      ctx.strokeStyle = '#CFD8DC';
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.ellipse(shiftX, hatY, radius * 0.56, radius * 0.16, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // Белый помпон
+      const pomX = shiftX + radius * 0.68;
+      const pomY = hatY - radius * 0.32;
+      const pomR = radius * 0.18;
+      ctx.fillStyle = '#FFFFFF';
+      ctx.strokeStyle = '#CFD8DC';
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.arc(pomX, pomY, pomR, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
 
       ctx.restore();
     }
@@ -1237,6 +1597,255 @@ export class CatRenderer {
       ctx.ellipse(0, 24, 24, 6.5, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
+      ctx.restore();
+    }
+
+    // 🐰 Котик-зайка (Bunny): пушистый ободок и длинные кроличьи ушки
+    if (skinId === 'bunny') {
+      ctx.save();
+      const hatY = -34;
+      // Белый пушистый ободок
+      ctx.fillStyle = '#FFFFFF';
+      ctx.strokeStyle = '#D7CCC8';
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.ellipse(0, hatY, 20, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // Ушки зайки
+      const drawHomeBunnyEar = (ox: number, tilt: number) => {
+        ctx.save();
+        ctx.translate(ox, hatY);
+        ctx.rotate(tilt);
+        // Белая часть
+        ctx.fillStyle = '#FFFFFF';
+        ctx.strokeStyle = '#D7CCC8';
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.ellipse(0, -18, 6.5, 18, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        // Розовая серединка
+        ctx.fillStyle = '#FF80AB';
+        ctx.beginPath();
+        ctx.ellipse(0, -17, 3.5, 13, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      };
+
+      drawHomeBunnyEar(-10, -0.12);
+      drawHomeBunnyEar(10, 0.12);
+      ctx.restore();
+    }
+
+    // 🌸 Цветочек (Flower): венок из ярких лепестков с листиком
+    if (skinId === 'flower') {
+      ctx.save();
+      const hatY = -35;
+
+      // Зеленый листочек
+      ctx.fillStyle = '#4CAF50';
+      ctx.strokeStyle = '#2E7D32';
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.ellipse(14, hatY - 4, 8, 4, 0.35, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // Лепестки
+      const petals = 6;
+      ctx.fillStyle = '#FF80AB';
+      ctx.strokeStyle = '#F06292';
+      ctx.lineWidth = 1.5;
+      for (let i = 0; i < petals; i++) {
+        const angle = (i * Math.PI * 2) / petals;
+        const px = Math.cos(angle) * 11;
+        const py = hatY + Math.sin(angle) * 8;
+        ctx.beginPath();
+        ctx.arc(px, py, 7, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      }
+
+      // Золотистая серединка
+      ctx.fillStyle = '#FFD54F';
+      ctx.strokeStyle = '#FFA000';
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.arc(0, hatY, 8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // 🐸 Лягушонок (Frog): зеленая шапочка-жабка с выпуклыми круглыми глазками
+    if (skinId === 'frog') {
+      ctx.save();
+      const hatY = -33;
+
+      // Зеленая шапочка
+      ctx.fillStyle = '#66BB6A';
+      ctx.strokeStyle = '#388E3C';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.ellipse(0, hatY, 25, 12, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // Глазки жабки
+      const eyeR = 8.5;
+      const eyeSpread = 13;
+      const eyeY = hatY - 9;
+
+      [-eyeSpread, eyeSpread].forEach((ex) => {
+        // Зеленое веко
+        ctx.fillStyle = '#66BB6A';
+        ctx.strokeStyle = '#388E3C';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(ex, eyeY, eyeR, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Белок
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.arc(ex, eyeY, eyeR * 0.72, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Зрачок
+        ctx.fillStyle = '#212121';
+        ctx.beginPath();
+        ctx.arc(ex, eyeY, eyeR * 0.38, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Блик
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.arc(ex - eyeR * 0.2, eyeY - eyeR * 0.2, eyeR * 0.2, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      ctx.restore();
+    }
+
+    // 🧶 Зимний пушистик (Winter): тёплая вязаная шапка с пушистым помпоном
+    if (skinId === 'winter') {
+      ctx.save();
+      const hatY = -34;
+
+      // Купол шапочки
+      ctx.fillStyle = '#0288D1';
+      ctx.strokeStyle = '#01579B';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(0, hatY - 6, 20, Math.PI, 0, false);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Узор вязки
+      ctx.strokeStyle = '#B3E5FC';
+      ctx.lineWidth = 2.4;
+      ctx.beginPath();
+      ctx.arc(0, hatY - 6, 14, Math.PI * 1.15, Math.PI * 1.85, false);
+      ctx.stroke();
+
+      // Белый пушистый отворот
+      ctx.fillStyle = '#FFFFFF';
+      ctx.strokeStyle = '#B0BEC5';
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.ellipse(0, hatY, 23, 7, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // Белый помпон на макушке
+      ctx.fillStyle = '#FFFFFF';
+      ctx.strokeStyle = '#CFD8DC';
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.arc(0, hatY - 26, 9, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    // 🎃 Тыковка (Pumpkin): хэллоуинская шапка-тыква с черенком
+    if (skinId === 'pumpkin') {
+      ctx.save();
+      const hatY = -35;
+
+      // Тело тыквы
+      ctx.fillStyle = '#FF7043';
+      ctx.strokeStyle = '#D84315';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.ellipse(0, hatY, 24, 14, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // Дольки тыквы
+      ctx.strokeStyle = '#BF360C';
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.ellipse(0, hatY, 13, 13.5, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Зеленый черенок тыквы
+      ctx.fillStyle = '#4CAF50';
+      ctx.strokeStyle = '#2E7D32';
+      ctx.lineWidth = 1.8;
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(-2, hatY - 13);
+      ctx.quadraticCurveTo(3, hatY - 22, 6, -58);
+      ctx.lineTo(8, -56);
+      ctx.quadraticCurveTo(4, hatY - 15, 2, hatY - 13);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    // 🎅 Дед Мороз (Santa): новогодний колпак с меховой опушкой и помпоном
+    if (skinId === 'santa') {
+      ctx.save();
+      const hatY = -34;
+
+      // Красный конус колпака
+      ctx.fillStyle = '#D32F2F';
+      ctx.strokeStyle = '#B71C1C';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-18, hatY - 2);
+      ctx.quadraticCurveTo(0, hatY - 30, 26, hatY - 14);
+      ctx.quadraticCurveTo(8, hatY - 18, 18, hatY - 2);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Белая меховая опушка
+      ctx.fillStyle = '#FFFFFF';
+      ctx.strokeStyle = '#CFD8DC';
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.ellipse(0, hatY, 23, 7, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // Белый помпон
+      ctx.fillStyle = '#FFFFFF';
+      ctx.strokeStyle = '#CFD8DC';
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.arc(28, hatY - 12, 7.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
       ctx.restore();
     }
 

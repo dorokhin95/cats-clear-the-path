@@ -12,7 +12,7 @@ describe('CatCollection & CatHouse Progression', () => {
 
   it('реестр CatCollection должен содержать корректные данные скинов', () => {
     const skins = CatCollection.getAllSkins();
-    expect(skins.length).toBeGreaterThanOrEqual(8);
+    expect(skins.length).toBe(15);
 
     const ginger = CatCollection.getSkin('ginger');
     expect(ginger).toBeDefined();
@@ -23,6 +23,19 @@ describe('CatCollection & CatHouse Progression', () => {
     expect(pirate).toBeDefined();
     expect(pirate?.rarity).toBe('special');
     expect(pirate?.cost).toBe(400);
+
+    // Новые шапочки
+    const bunny = CatCollection.getSkin('bunny');
+    expect(bunny).toBeDefined();
+    expect(bunny?.cost).toBe(120);
+
+    const frog = CatCollection.getSkin('frog');
+    expect(frog).toBeDefined();
+    expect(frog?.cost).toBe(250);
+
+    const santa = CatCollection.getSkin('santa');
+    expect(santa).toBeDefined();
+    expect(santa?.cost).toBe(500);
   });
 
   it('игрок не может купить скин, если не хватает монет', () => {
@@ -70,7 +83,7 @@ describe('CatCollection & CatHouse Progression', () => {
     house.mount(container);
 
     // Изначально живёт только базовый Рыжик
-    expect(container.textContent).toContain('В домике живут: 1 из 9 котиков!');
+    expect(container.textContent).toContain('В домике живут: 1 из 15 котиков!');
     let canvases = container.querySelectorAll('#houseRoomView canvas');
     expect(canvases.length).toBe(1);
 
@@ -82,7 +95,7 @@ describe('CatCollection & CatHouse Progression', () => {
     house.updateProgress(progress);
 
     // Теперь в домике живут 3 котика
-    expect(container.textContent).toContain('В домике живут: 3 из 9 котиков!');
+    expect(container.textContent).toContain('В домике живут: 3 из 15 котиков!');
     canvases = container.querySelectorAll('#houseRoomView canvas');
     expect(canvases.length).toBe(3);
 
@@ -103,7 +116,7 @@ describe('CatCollection & CatHouse Progression', () => {
     collection.mount(container);
 
     const canvases = container.querySelectorAll('#skinsListContainer canvas');
-    expect(canvases.length).toBe(9);
+    expect(canvases.length).toBe(15);
   });
 
   it('MainMenu отображает выбранного котика и обновляется при смене скина', async () => {
@@ -177,4 +190,25 @@ describe('CatCollection & CatHouse Progression', () => {
     expect(rewardedAmount).toBe(15);
     expect(progress.getCoins()).toBe(15);
   });
+
+  it('игрок может приобрести все 6 новых шапочек и успешно переключать их', () => {
+    const newHatIds = ['bunny', 'flower', 'frog', 'winter', 'pumpkin', 'santa'];
+    const totalCost = newHatIds.reduce((sum, id) => sum + (CatCollection.getSkin(id)?.cost || 0), 0);
+
+    progress.addCoins(totalCost);
+
+    for (const hatId of newHatIds) {
+      const skin = CatCollection.getSkin(hatId)!;
+      const bought = progress.buySkin(skin.id, skin.cost);
+      expect(bought).toBe(true);
+      expect(progress.isCatUnlocked(hatId)).toBe(true);
+      expect(progress.getSelectedCat()).toBe(hatId);
+    }
+
+    expect(progress.getCoins()).toBe(0);
+    // Переключение обратно на шапочку-зайку
+    expect(progress.selectCat('bunny')).toBe(true);
+    expect(progress.getSelectedCat()).toBe('bunny');
+  });
 });
+

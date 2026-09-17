@@ -3,6 +3,7 @@ import { PlayerProgress } from '../progression/PlayerProgress';
 import { CatCollection } from '../progression/CatCollection';
 import { CatRenderer } from '../rendering/CatRenderer';
 import { SaveService } from '../services/SaveService';
+import { renderCoinIcon } from './CoinBadge';
 
 export interface CatHouseCallbacks {
   onBack: () => void;
@@ -18,7 +19,7 @@ interface HouseSpot {
   zIndex: number;
 }
 
-// 9 уютных мест для котиков в богатой комнате Домика
+// 15 уютных мест для всех котиков в богатой комнате Домика
 const HOUSE_SPOTS: HouseSpot[] = [
   { bottom: 22, left: '44%', zIndex: 10 },   // 1. На мягком круглом ковре по центру
   { bottom: 58, left: '25%', zIndex: 8 },    // 2. На большом мягком диване
@@ -28,7 +29,13 @@ const HOUSE_SPOTS: HouseSpot[] = [
   { bottom: 20, right: '14%', zIndex: 11 },  // 6. В уютной коробке "Для котика" 📦
   { bottom: 82, left: '54%', zIndex: 8 },    // 7. На подушке рядом с диваном
   { bottom: 86, right: '30%', zIndex: 8 },   // 8. Возле двойной мисочки с едой
-  { bottom: 12, left: '22%', zIndex: 11 }    // 9. Играет с клубком шерстяных ниток спереди
+  { bottom: 12, left: '22%', zIndex: 11 },   // 9. Играет с клубком шерстяных ниток спереди
+  { top: 108, right: '20%', zIndex: 8 },    // 10. На настенной полочке под цветком
+  { bottom: 28, left: '62%', zIndex: 10 },   // 11. На коврике у дивана
+  { bottom: 32, left: '13%', zIndex: 9 },    // 12. Рядом с книжным шкафом
+  { bottom: 30, right: '23%', zIndex: 10 },  // 13. У подножия когтеточки
+  { bottom: 42, left: '48%', zIndex: 9 },    // 14. В центре ковра
+  { bottom: 18, right: '35%', zIndex: 11 }   // 15. Справа на коврике
 ];
 
 export class CatHouseScreen implements IScreen {
@@ -57,8 +64,8 @@ export class CatHouseScreen implements IScreen {
       <div style="width: 100%; display: flex; justify-content: space-between; align-items: center;">
         <button id="btnCatHouseBack" class="btn btn-icon" title="Назад">🏠</button>
         <h2 class="title-medium" style="margin: 0; font-size: 24px;">ДОМИК КОТИКОВ</h2>
-        <div style="display: flex; align-items: center; gap: 6px; background: white; padding: 6px 14px; border-radius: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); font-weight: 700;">
-          <span>💰</span>
+        <div class="coin-pill" style="display: flex; align-items: center; gap: 6px; font-weight: 700;">
+          ${renderCoinIcon(20)}
           <span id="catHouseCoinBalance">${this.progress.getCoins()}</span>
         </div>
       </div>

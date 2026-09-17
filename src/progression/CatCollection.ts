@@ -83,6 +83,54 @@ export const CAT_SKINS: SkinDefinition[] = [
     cost: 500,
     description: 'Мечтатель в прозрачном звездном шлеме.',
     icon: '🚀'
+  },
+  {
+    id: 'bunny',
+    name: 'Котик-зайка',
+    rarity: 'rare',
+    cost: 120,
+    description: 'Очаровательный ушастик в пушистой шапочке зайки.',
+    icon: '🐰'
+  },
+  {
+    id: 'flower',
+    name: 'Цветочек',
+    rarity: 'rare',
+    cost: 180,
+    description: 'Нежный весенний котик с венком из цветочных лепестков.',
+    icon: '🌸'
+  },
+  {
+    id: 'frog',
+    name: 'Лягушонок',
+    rarity: 'rare',
+    cost: 250,
+    description: 'Забавная зеленая шапка-лягушка с выпуклыми глазками.',
+    icon: '🐸'
+  },
+  {
+    id: 'winter',
+    name: 'Зимний пушистик',
+    rarity: 'special',
+    cost: 320,
+    description: 'Тёплая вязаная зимняя шапочка с пушистым помпоном.',
+    icon: '🧶'
+  },
+  {
+    id: 'pumpkin',
+    name: 'Тыковка',
+    rarity: 'special',
+    cost: 400,
+    description: 'Яркая тыквенная шляпка к весёлому осеннему маскараду.',
+    icon: '🎃'
+  },
+  {
+    id: 'santa',
+    name: 'Дед Мороз',
+    rarity: 'special',
+    cost: 500,
+    description: 'Праздничный новогодний колпак с белоснежным помпоном.',
+    icon: '🎅'
   }
 ];
 
