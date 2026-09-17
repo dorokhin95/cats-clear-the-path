@@ -32,11 +32,11 @@ export class WinScreen {
 
   public mount(container: HTMLElement): void {
     const modal = document.createElement('div');
-    modal.className = 'ui-modal';
+    modal.className = 'modal-overlay';
     modal.id = this.modalId;
 
     modal.innerHTML = `
-      <div class="ui-modal__content" style="max-width: 320px; width: 90%; text-align: center; gap: 14px; padding: 24px;">
+      <div class="modal-content" style="max-width: 330px; width: 90%; text-align: center; gap: 14px; padding: 22px;">
         <h2 class="title-large" style="color: var(--color-primary-green); margin: 0; font-size: 28px;">
           УРОВЕНЬ ПРОЙДЕН!
         </h2>
@@ -218,6 +218,10 @@ export class WinScreen {
   }
 
   public close(): void {
+    if (this.modalElement) {
+      this.modalElement.classList.remove('active');
+      this.modalElement.style.removeProperty('z-index');
+    }
     this.screenManager.closeModal(this.modalId);
   }
 }

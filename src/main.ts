@@ -125,6 +125,12 @@ async function initApp(): Promise<void> {
 
   // 8. Функция загрузки уровня
   const loadGameLevel = (levelId: number) => {
+    screenManager.closeAllModals();
+    winScreen?.close();
+    loseScreen?.close();
+    pauseMenu?.close();
+    settingsMenu.close();
+
     renderer.handleResize();
     currentLevelId = levelId;
     const selectedSkin = playerProgress.getSelectedCat();

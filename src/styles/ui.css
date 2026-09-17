@@ -59,7 +59,8 @@
 }
 
 /* Модальные окна */
-.modal-overlay {
+.modal-overlay,
+.ui-modal {
   position: absolute;
   top: 0;
   left: 0;
@@ -78,12 +79,28 @@
   pointer-events: auto;
 }
 
-.modal-overlay.active {
+.modal-overlay.active,
+.ui-modal.active {
   opacity: 1;
   visibility: visible;
 }
 
-.modal-content {
+/* Иерархия слоев модальных окон для предотвращения взаимного перекрытия */
+#modal-pause {
+  z-index: 50;
+}
+
+#modal-win,
+#modal-lose {
+  z-index: 55;
+}
+
+#modal-settings {
+  z-index: 60;
+}
+
+.modal-content,
+.ui-modal__content {
   background-color: var(--color-surface);
   border-radius: var(--radius-lg);
   padding: 28px 24px;

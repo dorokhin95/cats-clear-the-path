@@ -76,6 +76,11 @@ export class LoseScreen {
   }
 
   public close(): void {
+    const modal = document.getElementById(this.modalId);
+    if (modal) {
+      modal.classList.remove('active');
+      modal.style.removeProperty('z-index');
+    }
     this.screenManager.closeModal(this.modalId);
   }
 }
