@@ -12,6 +12,8 @@ export interface PlayerData {
   coins: number;
   unlockedCats: string[];
   selectedCat: string;
+  selectedHat?: string;
+  unlockedHats?: string[];
   remainingHints: number;
   settings: SettingsData;
   tutorialCompleted: boolean;
@@ -34,6 +36,8 @@ export class PlayerProgress {
       coins: 0,
       unlockedCats: ['ginger'],
       selectedCat: 'ginger',
+      selectedHat: 'none',
+      unlockedHats: ['none'],
       remainingHints: 3,
       petCount: 0,
       catPetting: initialData?.catPetting ? { ...initialData.catPetting } : {},
@@ -53,14 +57,42 @@ export class PlayerProgress {
 
     if (!this.data.catPetting) this.data.catPetting = {};
 
-    // Гарантируем, что unlockedCats всегда является массивом и накапливает всех разблокированных котиков
+    // Список специальных шапочек для мягкой миграции
+    const HAT_IDS = new Set(['bunny', 'flower', 'frog', 'winter', 'pumpkin', 'santa']);
+
+    // Миграция и инициализация шапочек
+    const existingHats: string[] = Array.isArray(initialData?.unlockedHats) && initialData!.unlockedHats.length > 0
+      ? initialData!.unlockedHats
+      : ['none'];
+
+    const hatSet = new Set<string>(existingHats);
+    hatSet.add('none');
+
+    // Если шапочки ранее попали в unlockedCats, переносим их в unlockedHats
+    if (Array.isArray(initialData?.unlockedCats)) {
+      initialData!.unlockedCats.forEach((catId) => {
+        if (HAT_IDS.has(catId)) {
+          hatSet.add(catId);
+        }
+      });
+    }
+    this.data.unlockedHats = Array.from(hatSet);
+
+    if (initialData?.selectedCat && HAT_IDS.has(initialData.selectedCat)) {
+      this.data.selectedHat = initialData.selectedCat;
+      this.data.selectedCat = 'ginger';
+    } else {
+      this.data.selectedHat = initialData?.selectedHat || 'none';
+    }
+
+    // Гарантируем, что unlockedCats всегда является массивом и накапливает только породы котиков
     const existingCats: string[] = Array.isArray(initialData?.unlockedCats) && initialData!.unlockedCats.length > 0
-      ? initialData!.unlockedCats
+      ? initialData!.unlockedCats.filter((id) => !HAT_IDS.has(id))
       : ['ginger'];
 
     const catSet = new Set<string>(existingCats);
     catSet.add('ginger');
-    if (this.data.selectedCat) {
+    if (this.data.selectedCat && !HAT_IDS.has(this.data.selectedCat)) {
       catSet.add(this.data.selectedCat);
     }
     this.data.unlockedCats = Array.from(catSet);
@@ -209,6 +241,42 @@ export class PlayerProgress {
     this.data.unlockedCats = Array.from(catSet);
     this.data.selectedCat = skinId;
     return true;
+  }
+
+  public getSelectedHat(): string {
+    return this.data.selectedHat || 'none';
+  }
+
+  public selectHat(hatId: string): boolean {
+    if (hatId === 'none' || this.isHatUnlocked(hatId)) {
+      this.data.selectedHat = hatId;
+      return true;
+    }
+    return false;
+  }
+
+  public isHatUnlocked(hatId: string): boolean {
+    if (hatId === 'none') return true;
+    return (this.data.unlockedHats || ['none']).includes(hatId);
+  }
+
+  public buyHat(hatId: string, cost: number): boolean {
+    if (this.isHatUnlocked(hatId)) {
+      this.data.selectedHat = hatId;
+      return true;
+    }
+    if (this.data.coins < cost) return false;
+
+    this.data.coins -= cost;
+    const hatSet = new Set(this.data.unlockedHats || ['none']);
+    hatSet.add(hatId);
+    this.data.unlockedHats = Array.from(hatSet);
+    this.data.selectedHat = hatId;
+    return true;
+  }
+
+  public getUnlockedHats(): string[] {
+    return Array.from(new Set(this.data.unlockedHats || ['none']));
   }
 
   public updateSettings(settings: SettingsData): void {

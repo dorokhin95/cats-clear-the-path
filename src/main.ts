@@ -18,6 +18,7 @@ import { SaveService } from './services/SaveService';
 import { PlatformManager } from './platform/PlatformManager';
 import { LevelResult } from './game/GameRules';
 import { TutorialController } from './tutorial/TutorialController';
+import { CatRenderer } from './rendering/CatRenderer';
 
 async function initApp(): Promise<void> {
   const canvas = document.getElementById('gameCanvas') as HTMLCanvasElement;
@@ -37,6 +38,7 @@ async function initApp(): Promise<void> {
   // 2. Загрузка сохранённого прогресса
   const playerProgress = SaveService.load();
   let currentLevelId = playerProgress.getLastUnlockedLevel();
+  CatRenderer.setActiveHat(playerProgress.getSelectedHat());
 
   // 3. Инициализация аудиосистемы с сохраненными настройками
   const audioManager = new AudioManager();
@@ -282,6 +284,27 @@ async function initApp(): Promise<void> {
       audioManager.playCoin();
       const success = playerProgress.buySkin(skin.id, skin.cost);
       if (success) {
+        SaveService.save(playerProgress);
+        collectionScreen?.updateProgress(playerProgress);
+        catHouseScreen?.updateProgress(playerProgress);
+        mainMenu?.updateProgress(playerProgress);
+        updateCoinsDisplay();
+      }
+    },
+    onSelectHat: (hatId) => {
+      audioManager.playClick();
+      playerProgress.selectHat(hatId);
+      CatRenderer.setActiveHat(hatId);
+      SaveService.save(playerProgress);
+      collectionScreen?.updateProgress(playerProgress);
+      catHouseScreen?.updateProgress(playerProgress);
+      mainMenu?.updateProgress(playerProgress);
+    },
+    onBuyHat: (hat) => {
+      audioManager.playCoin();
+      const success = playerProgress.buyHat(hat.id, hat.cost);
+      if (success) {
+        CatRenderer.setActiveHat(hat.id);
         SaveService.save(playerProgress);
         collectionScreen?.updateProgress(playerProgress);
         catHouseScreen?.updateProgress(playerProgress);

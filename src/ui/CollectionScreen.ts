@@ -1,12 +1,14 @@
 import { IScreen } from './ScreenManager';
 import { PlayerProgress } from '../progression/PlayerProgress';
-import { CatCollection, SkinDefinition } from '../progression/CatCollection';
+import { CatCollection, SkinDefinition, HatDefinition } from '../progression/CatCollection';
 import { CatRenderer } from '../rendering/CatRenderer';
 import { renderCoinIcon } from './CoinBadge';
 
 export interface CollectionCallbacks {
   onSelectCat: (skinId: string) => void;
   onBuyCat: (skin: SkinDefinition) => void;
+  onSelectHat: (hatId: string) => void;
+  onBuyHat: (hat: HatDefinition) => void;
   onBack: () => void;
 }
 
@@ -15,6 +17,7 @@ export class CollectionScreen implements IScreen {
   private element: HTMLElement | null = null;
   private callbacks: CollectionCallbacks;
   private progress: PlayerProgress;
+  private activeTab: 'cats' | 'hats' = 'cats';
 
   constructor(progress: PlayerProgress, callbacks: CollectionCallbacks) {
     this.progress = progress;
@@ -42,8 +45,14 @@ export class CollectionScreen implements IScreen {
         </div>
       </div>
 
-      <!-- Сетка котиков -->
-      <div id="skinsListContainer" style="width: 100%; display: flex; flex-direction: column; gap: 12px; margin-top: 6px;">
+      <!-- Вкладки переключения: Котики / Шапочки -->
+      <div class="collection-tabs" style="display: flex; width: 100%; max-width: 380px; background: #EFE8DE; border-radius: 14px; padding: 4px; gap: 4px; box-sizing: border-box;">
+        <button id="tabCatsBtn" class="btn" style="flex: 1; padding: 9px 12px; font-size: 15px; font-weight: 700; border-radius: 10px; border: none; cursor: pointer; transition: all 0.2s ease;">🐱 Котики</button>
+        <button id="tabHatsBtn" class="btn" style="flex: 1; padding: 9px 12px; font-size: 15px; font-weight: 700; border-radius: 10px; border: none; cursor: pointer; transition: all 0.2s ease;">🎩 Шапочки</button>
+      </div>
+
+      <!-- Контейнер карточек выбранной вкладки -->
+      <div id="collectionItemsContainer" style="width: 100%; display: flex; flex-direction: column; gap: 12px; margin-top: 4px;">
         <!-- Карточки генерируются динамически -->
       </div>
     `;
@@ -55,13 +64,67 @@ export class CollectionScreen implements IScreen {
       this.callbacks.onBack();
     });
 
-    this.renderSkins();
+    const tabCatsBtn = screen.querySelector('#tabCatsBtn') as HTMLButtonElement;
+    const tabHatsBtn = screen.querySelector('#tabHatsBtn') as HTMLButtonElement;
+
+    tabCatsBtn?.addEventListener('click', () => {
+      this.setTab('cats');
+    });
+
+    tabHatsBtn?.addEventListener('click', () => {
+      this.setTab('hats');
+    });
+
+    this.updateTabsVisual();
+    this.renderContent();
+  }
+
+  public setTab(tab: 'cats' | 'hats'): void {
+    if (this.activeTab === tab) return;
+    this.activeTab = tab;
+    this.updateTabsVisual();
+    this.renderContent();
+  }
+
+  private updateTabsVisual(): void {
+    if (!this.element) return;
+    const tabCatsBtn = this.element.querySelector('#tabCatsBtn') as HTMLButtonElement | null;
+    const tabHatsBtn = this.element.querySelector('#tabHatsBtn') as HTMLButtonElement | null;
+
+    if (tabCatsBtn && tabHatsBtn) {
+      if (this.activeTab === 'cats') {
+        tabCatsBtn.style.background = '#FFFFFF';
+        tabCatsBtn.style.color = 'var(--color-text-dark)';
+        tabCatsBtn.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+
+        tabHatsBtn.style.background = 'transparent';
+        tabHatsBtn.style.color = 'var(--color-text-muted)';
+        tabHatsBtn.style.boxShadow = 'none';
+      } else {
+        tabHatsBtn.style.background = '#FFFFFF';
+        tabHatsBtn.style.color = 'var(--color-text-dark)';
+        tabHatsBtn.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+
+        tabCatsBtn.style.background = 'transparent';
+        tabCatsBtn.style.color = 'var(--color-text-muted)';
+        tabCatsBtn.style.boxShadow = 'none';
+      }
+    }
+  }
+
+  public renderContent(): void {
+    const coinEl = this.element?.querySelector('#collectionCoinBalance');
+    if (coinEl) coinEl.textContent = `${this.progress.getCoins()}`;
+
+    if (this.activeTab === 'cats') {
+      this.renderSkins();
+    } else {
+      this.renderHats();
+    }
   }
 
   public renderSkins(): void {
-    const container = this.element?.querySelector('#skinsListContainer');
-    const coinEl = this.element?.querySelector('#collectionCoinBalance');
-    if (coinEl) coinEl.textContent = `${this.progress.getCoins()}`;
+    const container = this.element?.querySelector('#collectionItemsContainer');
     if (!container) return;
 
     container.innerHTML = '';
@@ -104,7 +167,7 @@ export class CollectionScreen implements IScreen {
         <div id="btnContainer_${skin.id}"></div>
       `;
 
-      // Генерация наглядного превью котика на Canvas
+      // Превью породы котика в исходном виде
       const previewBox = card.querySelector(`#skinCanvasContainer_${skin.id}`);
       if (previewBox) {
         const canvas = document.createElement('canvas');
@@ -112,7 +175,8 @@ export class CollectionScreen implements IScreen {
         canvas.height = 68;
         canvas.style.width = '68px';
         canvas.style.height = '68px';
-        CatRenderer.renderPreviewToCanvas(canvas, skin.id);
+        const defaultAccessory = skin.id === 'hat' || skin.id === 'pirate' || skin.id === 'astronaut' ? skin.id : 'none';
+        CatRenderer.renderPreviewToCanvas(canvas, skin.id, defaultAccessory);
         previewBox.appendChild(canvas);
       }
 
@@ -136,7 +200,7 @@ export class CollectionScreen implements IScreen {
           btn.textContent = 'ВЫБРАТЬ';
           btn.addEventListener('click', () => {
             this.callbacks.onSelectCat(skin.id);
-            this.renderSkins();
+            this.renderContent();
           });
           btnContainer.appendChild(btn);
         } else {
@@ -155,7 +219,114 @@ export class CollectionScreen implements IScreen {
           if (canAfford) {
             btn.addEventListener('click', () => {
               this.callbacks.onBuyCat(skin);
-              this.renderSkins();
+              this.renderContent();
+            });
+          }
+          btnContainer.appendChild(btn);
+        }
+      }
+
+      container.appendChild(card);
+    }
+  }
+
+  public renderHats(): void {
+    const container = this.element?.querySelector('#collectionItemsContainer');
+    if (!container) return;
+
+    container.innerHTML = '';
+    const hats = CatCollection.getAllHats();
+    const currentSelectedHat = this.progress.getSelectedHat();
+    const currentSelectedCat = this.progress.getSelectedCat();
+    const coins = this.progress.getCoins();
+
+    for (const hat of hats) {
+      const isUnlocked = this.progress.isHatUnlocked(hat.id);
+      const isSelected = currentSelectedHat === hat.id;
+
+      const card = document.createElement('div');
+      card.style.background = 'white';
+      card.style.borderRadius = '18px';
+      card.style.padding = '14px 16px';
+      card.style.display = 'flex';
+      card.style.alignItems = 'center';
+      card.style.justifyContent = 'space-between';
+      card.style.boxShadow = '0 4px 12px rgba(54, 54, 54, 0.06)';
+      card.style.gap = '12px';
+
+      const rarityColor = hat.rarity === 'special' ? '#9B51E0' : hat.rarity === 'rare' ? '#2F80ED' : '#6FCF97';
+      const rarityLabel = hat.rarity === 'special' ? 'Особый' : hat.rarity === 'rare' ? 'Редкий' : 'Обычный';
+
+      card.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <div id="hatCanvasContainer_${hat.id}" style="width: 68px; height: 68px; min-width: 68px; border-radius: 16px; background: #FFF6EC; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); position: relative; overflow: hidden;"></div>
+          <div style="display: flex; flex-direction: column; gap: 3px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-weight: 700; font-size: 18px; color: var(--color-text-dark);">${hat.name}</span>
+              <span style="font-size: 11px; font-weight: 700; color: white; background: ${rarityColor}; padding: 2px 8px; border-radius: 10px;">
+                ${rarityLabel}
+              </span>
+            </div>
+            <div style="font-size: 13px; color: var(--color-text-muted); max-width: 160px; line-height: 1.2;">
+              ${hat.description}
+            </div>
+          </div>
+        </div>
+        <div id="hatBtnContainer_${hat.id}"></div>
+      `;
+
+      // Примерка шапочки на текущего выбранного любимца
+      const previewBox = card.querySelector(`#hatCanvasContainer_${hat.id}`);
+      if (previewBox) {
+        const canvas = document.createElement('canvas');
+        canvas.width = 68;
+        canvas.height = 68;
+        canvas.style.width = '68px';
+        canvas.style.height = '68px';
+        CatRenderer.renderPreviewToCanvas(canvas, currentSelectedCat, hat.id);
+        previewBox.appendChild(canvas);
+      }
+
+      const btnContainer = card.querySelector(`#hatBtnContainer_${hat.id}`);
+      if (btnContainer) {
+        if (isSelected) {
+          const btn = document.createElement('button');
+          btn.className = 'btn';
+          btn.style.background = '#E8F7EE';
+          btn.style.color = 'var(--color-primary-green)';
+          btn.style.border = '2px solid var(--color-primary-green)';
+          btn.style.padding = '8px 14px';
+          btn.style.fontSize = '14px';
+          btn.textContent = 'НАДЕТО ✓';
+          btnContainer.appendChild(btn);
+        } else if (isUnlocked) {
+          const btn = document.createElement('button');
+          btn.className = 'btn btn-secondary';
+          btn.style.padding = '8px 16px';
+          btn.style.fontSize = '14px';
+          btn.textContent = 'НАДЕТЬ';
+          btn.addEventListener('click', () => {
+            this.callbacks.onSelectHat(hat.id);
+            this.renderContent();
+          });
+          btnContainer.appendChild(btn);
+        } else {
+          const btn = document.createElement('button');
+          const canAfford = coins >= hat.cost;
+          btn.className = `btn ${canAfford ? 'btn-accent' : ''}`;
+          if (!canAfford) {
+            btn.style.background = '#E5DDCF';
+            btn.style.color = '#8A8174';
+            btn.style.boxShadow = 'none';
+            btn.style.cursor = 'not-allowed';
+          }
+          btn.style.padding = '8px 14px';
+          btn.style.fontSize = '14px';
+          btn.innerHTML = `<span style="display: inline-flex; align-items: center; gap: 5px;">${hat.cost} ${renderCoinIcon(16)}</span>`;
+          if (canAfford) {
+            btn.addEventListener('click', () => {
+              this.callbacks.onBuyHat(hat);
+              this.renderContent();
             });
           }
           btnContainer.appendChild(btn);
@@ -167,7 +338,8 @@ export class CollectionScreen implements IScreen {
   }
 
   public show(): void {
-    this.renderSkins();
+    this.updateTabsVisual();
+    this.renderContent();
     if (this.element) {
       this.element.classList.add('active');
     }
@@ -181,6 +353,6 @@ export class CollectionScreen implements IScreen {
 
   public updateProgress(progress: PlayerProgress): void {
     this.progress = progress;
-    this.renderSkins();
+    this.renderContent();
   }
 }

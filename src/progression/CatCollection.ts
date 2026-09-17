@@ -10,6 +10,16 @@ export interface SkinDefinition {
   icon: string;
 }
 
+export interface HatDefinition {
+  id: string;
+  name: string;
+  rarity: CatRarity;
+  cost: number;
+  unlockedByDefault?: boolean;
+  description: string;
+  icon: string;
+}
+
 export const CAT_SKINS: SkinDefinition[] = [
   {
     id: 'ginger',
@@ -83,6 +93,18 @@ export const CAT_SKINS: SkinDefinition[] = [
     cost: 500,
     description: 'Мечтатель в прозрачном звездном шлеме.',
     icon: '🚀'
+  }
+];
+
+export const CAT_HATS: HatDefinition[] = [
+  {
+    id: 'none',
+    name: 'Без шапочки',
+    rarity: 'common',
+    cost: 0,
+    unlockedByDefault: true,
+    description: 'Котики играют без головных уборов.',
+    icon: '❌'
   },
   {
     id: 'bunny',
@@ -142,4 +164,13 @@ export class CatCollection {
   public static getSkin(id: string): SkinDefinition | undefined {
     return CAT_SKINS.find((skin) => skin.id === id);
   }
+
+  public static getAllHats(): HatDefinition[] {
+    return [...CAT_HATS];
+  }
+
+  public static getHat(id: string): HatDefinition | undefined {
+    return CAT_HATS.find((hat) => hat.id === id);
+  }
 }
+

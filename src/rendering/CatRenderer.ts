@@ -238,6 +238,16 @@ const PALETTES: Record<string, SkinPalette> = {
 };
 
 export class CatRenderer {
+  private static activeHatId: string | null = null;
+
+  public static setActiveHat(hatId: string | null): void {
+    this.activeHatId = hatId && hatId !== 'none' ? hatId : null;
+  }
+
+  public static getActiveHat(): string | null {
+    return this.activeHatId;
+  }
+
   public static renderCat(
     ctx: CanvasRenderingContext2D,
     cat: Cat,
@@ -406,8 +416,9 @@ export class CatRenderer {
     // 7. Мордочка (глазки, носик, улыбка, усики, румянец)
     this.drawFace(ctx, radius, palette, skinId, direction, isBlinking);
 
-    // 8. Уникальные аксессуары (шляпа, пиратская треуголка, скафандр)
-    this.drawAccessories(ctx, radius, skinId, direction);
+    // 8. Уникальные аксессуары: если активна выбранная шапочка, она применяется ко ВСЕМ котикам на доске!
+    const effectiveHat = this.activeHatId || skinId;
+    this.drawAccessories(ctx, radius, effectiveHat, direction);
   }
 
   private static drawTail(
@@ -1201,7 +1212,8 @@ export class CatRenderer {
     skinId: string,
     centerX: number,
     centerY: number,
-    size: number
+    size: number,
+    hatId?: string | null
   ): void {
     ctx.save();
     ctx.translate(centerX, centerY);
@@ -1499,8 +1511,12 @@ export class CatRenderer {
     ctx.stroke();
 
     // 14. Специфические детальные аксессуары
+    const effectiveHat = hatId !== undefined
+      ? (hatId && hatId !== 'none' ? hatId : null)
+      : (this.activeHatId || (skinId === 'hat' || skinId === 'pirate' || skinId === 'astronaut' ? skinId : null));
+
     // 🎩 Шляпа-котелок
-    if (skinId === 'hat') {
+    if (effectiveHat === 'hat') {
       ctx.save();
       const hatY = -28;
       // Поля
@@ -1542,7 +1558,7 @@ export class CatRenderer {
     }
 
     // 🏴‍☠️ Пиратская треуголка
-    if (skinId === 'pirate') {
+    if (effectiveHat === 'pirate') {
       ctx.save();
       const hatY = -28;
       ctx.fillStyle = '#212121';
@@ -1566,7 +1582,7 @@ export class CatRenderer {
     }
 
     // 🚀 Скафандр космонавта
-    if (skinId === 'astronaut') {
+    if (effectiveHat === 'astronaut') {
       ctx.save();
       // Стеклянный сферический купол шлема
       ctx.strokeStyle = '#B0BEC5';
@@ -1601,7 +1617,7 @@ export class CatRenderer {
     }
 
     // 🐰 Котик-зайка (Bunny): пушистый ободок и длинные кроличьи ушки
-    if (skinId === 'bunny') {
+    if (effectiveHat === 'bunny') {
       ctx.save();
       const hatY = -34;
       // Белый пушистый ободок
@@ -1640,7 +1656,7 @@ export class CatRenderer {
     }
 
     // 🌸 Цветочек (Flower): венок из ярких лепестков с листиком
-    if (skinId === 'flower') {
+    if (effectiveHat === 'flower') {
       ctx.save();
       const hatY = -35;
 
@@ -1680,7 +1696,7 @@ export class CatRenderer {
     }
 
     // 🐸 Лягушонок (Frog): зеленая шапочка-жабка с выпуклыми круглыми глазками
-    if (skinId === 'frog') {
+    if (effectiveHat === 'frog') {
       ctx.save();
       const hatY = -33;
 
@@ -1731,7 +1747,7 @@ export class CatRenderer {
     }
 
     // 🧶 Зимний пушистик (Winter): тёплая вязаная шапка с пушистым помпоном
-    if (skinId === 'winter') {
+    if (effectiveHat === 'winter') {
       ctx.save();
       const hatY = -34;
 
@@ -1774,7 +1790,7 @@ export class CatRenderer {
     }
 
     // 🎃 Тыковка (Pumpkin): хэллоуинская шапка-тыква с черенком
-    if (skinId === 'pumpkin') {
+    if (effectiveHat === 'pumpkin') {
       ctx.save();
       const hatY = -35;
 
@@ -1812,7 +1828,7 @@ export class CatRenderer {
     }
 
     // 🎅 Дед Мороз (Santa): новогодний колпак с меховой опушкой и помпоном
-    if (skinId === 'santa') {
+    if (effectiveHat === 'santa') {
       ctx.save();
       const hatY = -34;
 
@@ -1860,15 +1876,20 @@ export class CatRenderer {
     skinId: string,
     centerX: number,
     centerY: number,
-    size: number
+    size: number,
+    hatId?: string | null
   ): void {
-    this.renderHomeCat(ctx, skinId, centerX, centerY, size);
+    this.renderHomeCat(ctx, skinId, centerX, centerY, size, hatId);
   }
 
   /**
-   * Рисует котика прямо в Canvas элемент заданного размера
+   * Рисует котика прямо в Canvas элемент заданного размера с поддержкой примерки шапочки
    */
-  public static renderPreviewToCanvas(canvas: HTMLCanvasElement, skinId: string): void {
+  public static renderPreviewToCanvas(
+    canvas: HTMLCanvasElement,
+    skinId: string,
+    hatId?: string | null
+  ): void {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     const dpr = window.devicePixelRatio || 1;
@@ -1880,6 +1901,6 @@ export class CatRenderer {
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, width, height);
 
-    this.renderHomeCat(ctx, skinId, width / 2, height / 2, Math.min(width, height));
+    this.renderHomeCat(ctx, skinId, width / 2, height / 2, Math.min(width, height), hatId);
   }
 }

@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { PlayerProgress } from '../src/progression/PlayerProgress';
 import { CatCollection } from '../src/progression/CatCollection';
 import { CatHouseScreen } from '../src/ui/CatHouseScreen';
+import { CatRenderer } from '../src/rendering/CatRenderer';
 
 describe('CatCollection & CatHouse Progression', () => {
   let progress: PlayerProgress;
@@ -10,9 +11,9 @@ describe('CatCollection & CatHouse Progression', () => {
     progress = new PlayerProgress();
   });
 
-  it('реестр CatCollection должен содержать корректные данные скинов', () => {
+  it('реестр CatCollection должен содержать корректные данные скинов и шапочек', () => {
     const skins = CatCollection.getAllSkins();
-    expect(skins.length).toBe(15);
+    expect(skins.length).toBe(9);
 
     const ginger = CatCollection.getSkin('ginger');
     expect(ginger).toBeDefined();
@@ -24,16 +25,27 @@ describe('CatCollection & CatHouse Progression', () => {
     expect(pirate?.rarity).toBe('special');
     expect(pirate?.cost).toBe(400);
 
-    // Новые шапочки
-    const bunny = CatCollection.getSkin('bunny');
+    const astronaut = CatCollection.getSkin('astronaut');
+    expect(astronaut).toBeDefined();
+    expect(astronaut?.cost).toBe(500);
+
+    // Каталог шапочек (7 видов включая "none")
+    const hats = CatCollection.getAllHats();
+    expect(hats.length).toBe(7);
+
+    const noneHat = CatCollection.getHat('none');
+    expect(noneHat).toBeDefined();
+    expect(noneHat?.cost).toBe(0);
+
+    const bunny = CatCollection.getHat('bunny');
     expect(bunny).toBeDefined();
     expect(bunny?.cost).toBe(120);
 
-    const frog = CatCollection.getSkin('frog');
+    const frog = CatCollection.getHat('frog');
     expect(frog).toBeDefined();
     expect(frog?.cost).toBe(250);
 
-    const santa = CatCollection.getSkin('santa');
+    const santa = CatCollection.getHat('santa');
     expect(santa).toBeDefined();
     expect(santa?.cost).toBe(500);
   });
@@ -82,8 +94,8 @@ describe('CatCollection & CatHouse Progression', () => {
     const house = new CatHouseScreen(progress, { onBack: () => {} });
     house.mount(container);
 
-    // Изначально живёт только базовый Рыжик
-    expect(container.textContent).toContain('В домике живут: 1 из 15 котиков!');
+    // Изначально живёт только базовый Рыжик (всего 9 пород котиков)
+    expect(container.textContent).toContain('В домике живут: 1 из 9 котиков!');
     let canvases = container.querySelectorAll('#houseRoomView canvas');
     expect(canvases.length).toBe(1);
 
@@ -95,7 +107,7 @@ describe('CatCollection & CatHouse Progression', () => {
     house.updateProgress(progress);
 
     // Теперь в домике живут 3 котика
-    expect(container.textContent).toContain('В домике живут: 3 из 15 котиков!');
+    expect(container.textContent).toContain('В домике живут: 3 из 9 котиков!');
     canvases = container.querySelectorAll('#houseRoomView canvas');
     expect(canvases.length).toBe(3);
 
@@ -105,18 +117,29 @@ describe('CatCollection & CatHouse Progression', () => {
     expect(container.textContent).toContain('Кот-пират');
   });
 
-  it('CollectionScreen отрисовывает превью-холсты для каждого котика', async () => {
+  it('CollectionScreen отрисовывает вкладки Котики и Шапочки с превью-холстами', async () => {
     const { CollectionScreen } = await import('../src/ui/CollectionScreen');
     const container = document.createElement('div');
     const collection = new CollectionScreen(progress, {
       onSelectCat: () => {},
       onBuyCat: () => {},
+      onSelectHat: () => {},
+      onBuyHat: () => {},
       onBack: () => {}
     });
     collection.mount(container);
 
-    const canvases = container.querySelectorAll('#skinsListContainer canvas');
-    expect(canvases.length).toBe(15);
+    // По умолчанию открыта вкладка "Котики" -> 9 пород
+    let canvases = container.querySelectorAll('#collectionItemsContainer canvas');
+    expect(canvases.length).toBe(9);
+
+    // Переключаемся на вкладку "Шапочки" -> 7 видов шапок
+    const tabHatsBtn = container.querySelector('#tabHatsBtn') as HTMLButtonElement;
+    expect(tabHatsBtn).toBeTruthy();
+    tabHatsBtn.click();
+
+    canvases = container.querySelectorAll('#collectionItemsContainer canvas');
+    expect(canvases.length).toBe(7);
   });
 
   it('MainMenu отображает выбранного котика и обновляется при смене скина', async () => {
@@ -191,24 +214,42 @@ describe('CatCollection & CatHouse Progression', () => {
     expect(progress.getCoins()).toBe(15);
   });
 
-  it('игрок может приобрести все 6 новых шапочек и успешно переключать их', () => {
-    const newHatIds = ['bunny', 'flower', 'frog', 'winter', 'pumpkin', 'santa'];
-    const totalCost = newHatIds.reduce((sum, id) => sum + (CatCollection.getSkin(id)?.cost || 0), 0);
+  it('игрок может приобрести все 6 платных шапочек, экипировать их и применить ко всем котикам', () => {
+    const paidHatIds = ['bunny', 'flower', 'frog', 'winter', 'pumpkin', 'santa'];
+    const totalCost = paidHatIds.reduce((sum, id) => sum + (CatCollection.getHat(id)?.cost || 0), 0);
+
+    // Базово выбрана шапка "none"
+    expect(progress.getSelectedHat()).toBe('none');
+    expect(progress.isHatUnlocked('none')).toBe(true);
 
     progress.addCoins(totalCost);
 
-    for (const hatId of newHatIds) {
-      const skin = CatCollection.getSkin(hatId)!;
-      const bought = progress.buySkin(skin.id, skin.cost);
+    for (const hatId of paidHatIds) {
+      const hat = CatCollection.getHat(hatId)!;
+      expect(hat).toBeDefined();
+      const bought = progress.buyHat(hat.id, hat.cost);
       expect(bought).toBe(true);
-      expect(progress.isCatUnlocked(hatId)).toBe(true);
-      expect(progress.getSelectedCat()).toBe(hatId);
+      expect(progress.isHatUnlocked(hatId)).toBe(true);
+      expect(progress.getSelectedHat()).toBe(hatId);
+
+      // Проверяем установку шапки для всех котиков на доске
+      CatRenderer.setActiveHat(hatId);
+      expect(CatRenderer.getActiveHat()).toBe(hatId);
     }
 
     expect(progress.getCoins()).toBe(0);
+
+    // Переключение обратно на "none" (без шапочки)
+    expect(progress.selectHat('none')).toBe(true);
+    expect(progress.getSelectedHat()).toBe('none');
+    CatRenderer.setActiveHat(progress.getSelectedHat());
+    expect(CatRenderer.getActiveHat()).toBeNull();
+
     // Переключение обратно на шапочку-зайку
-    expect(progress.selectCat('bunny')).toBe(true);
-    expect(progress.getSelectedCat()).toBe('bunny');
+    expect(progress.selectHat('bunny')).toBe(true);
+    expect(progress.getSelectedHat()).toBe('bunny');
+    CatRenderer.setActiveHat(progress.getSelectedHat());
+    expect(CatRenderer.getActiveHat()).toBe('bunny');
   });
 });
 

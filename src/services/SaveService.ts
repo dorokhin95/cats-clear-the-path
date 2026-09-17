@@ -69,6 +69,12 @@ export class SaveService {
           parsed.unlockedCats.push(parsed.selectedCat);
         }
       }
+      if (!Array.isArray(parsed.unlockedHats) || parsed.unlockedHats.length === 0) {
+        parsed.unlockedHats = ['none'];
+      }
+      if (!parsed.selectedHat) {
+        parsed.selectedHat = 'none';
+      }
       parsed.saveVersion = PlayerProgress.CURRENT_SAVE_VERSION;
 
       const progress = new PlayerProgress(parsed);
