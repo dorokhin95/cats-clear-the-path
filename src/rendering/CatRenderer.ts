@@ -2019,6 +2019,13 @@ export class CatRenderer {
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, width, height);
 
-    this.renderHomeCat(ctx, skinId, width / 2, height / 2, Math.min(width, height), hatId);
+    // Масштабируем фигурку (0.72), чтобы высокие головные уборы (ушки зайки, глаза лягушонка, помпоны)
+    // гарантированно не срезались верхним краем канваса
+    const effectiveSize = Math.min(width, height) * 0.72;
+    const centerX = width / 2;
+    // Смещаем центр модели немного вниз, компенсируя высоту шапочек над котиком
+    const centerY = height / 2 + 10 * (effectiveSize / 100);
+
+    this.renderHomeCat(ctx, skinId, centerX, centerY, effectiveSize, hatId);
   }
 }

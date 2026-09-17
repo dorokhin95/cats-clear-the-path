@@ -52,7 +52,7 @@ export class MainMenu implements IScreen {
           <span style="color: var(--color-accent-orange);">ПУТЬ СВОБОДЕН!</span>
         </h1>
         <div id="mainMenuMascotWrapper" style="cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px; transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);" title="Нажмите, чтобы погладить!">
-          <canvas id="mainMenuMascotCanvas" width="96" height="96" style="width: 96px; height: 96px; filter: drop-shadow(0 8px 16px rgba(54,54,54,0.18));"></canvas>
+          <canvas id="mainMenuMascotCanvas" width="110" height="110" style="width: 110px; height: 110px; filter: drop-shadow(0 8px 16px rgba(54,54,54,0.18));"></canvas>
           <div id="mainMenuMascotTag" style="font-size: 13px; font-weight: 700; color: #5D4037; background: rgba(255, 255, 255, 0.92); padding: 4px 14px; border-radius: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border: 1px solid #FFE0B2;">
             Рыжик 🐾
           </div>
@@ -114,10 +114,11 @@ export class MainMenu implements IScreen {
     const canvas = this.element.querySelector('#mainMenuMascotCanvas') as HTMLCanvasElement;
     const tag = this.element.querySelector('#mainMenuMascotTag');
     const selectedCatId = this.progress ? this.progress.getSelectedCat() : 'ginger';
+    const selectedHatId = this.progress ? this.progress.getSelectedHat() : null;
     const skinDef = CatCollection.getSkin(selectedCatId);
 
     if (canvas) {
-      CatRenderer.renderPreviewToCanvas(canvas, selectedCatId);
+      CatRenderer.renderPreviewToCanvas(canvas, selectedCatId, selectedHatId);
     }
     if (tag) {
       tag.textContent = skinDef ? `${skinDef.name} ${skinDef.icon}` : 'Рыжик 🐾';
