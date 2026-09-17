@@ -1,6 +1,7 @@
 import { ScreenManager } from './ScreenManager';
 import { LevelResult } from '../game/GameRules';
 import { renderCoinIcon } from './CoinBadge';
+import { renderGoldenStar, renderEmptyStar } from './StarBadge';
 
 export interface WinScreenCallbacks {
   onNextLevel: () => void;
@@ -42,10 +43,10 @@ export class WinScreen {
         </h2>
 
         <!-- Звезды -->
-        <div id="winStarsContainer" style="display: flex; justify-content: center; gap: 8px; font-size: 32px;">
-          <span id="winStar1" class="win-star" style="opacity: 0.2; transform: scale(0.8); transition: all 300ms cubic-bezier(0.34, 1.56, 0.64, 1);">⭐</span>
-          <span id="winStar2" class="win-star" style="opacity: 0.2; transform: scale(0.8); transition: all 300ms cubic-bezier(0.34, 1.56, 0.64, 1);">⭐</span>
-          <span id="winStar3" class="win-star" style="opacity: 0.2; transform: scale(0.8); transition: all 300ms cubic-bezier(0.34, 1.56, 0.64, 1);">⭐</span>
+        <div id="winStarsContainer" style="display: flex; justify-content: center; align-items: center; gap: 12px; min-height: 64px; margin: 4px 0;">
+          <div id="winStar1" class="win-star" style="opacity: 0; transform: translateY(6px) rotate(-6deg) scale(0); transition: transform 380ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 200ms ease; display: inline-flex; align-items: center; justify-content: center;"></div>
+          <div id="winStar2" class="win-star" style="opacity: 0; transform: translateY(-4px) rotate(0deg) scale(0); transition: transform 380ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 200ms ease; display: inline-flex; align-items: center; justify-content: center;"></div>
+          <div id="winStar3" class="win-star" style="opacity: 0; transform: translateY(6px) rotate(6deg) scale(0); transition: transform 380ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 200ms ease; display: inline-flex; align-items: center; justify-content: center;"></div>
         </div>
 
         <!-- Подробная статистика прохождения (п. 5 и п. 17 ТЗ) -->
@@ -178,43 +179,50 @@ export class WinScreen {
       scoreEl.textContent = `${result.performanceScore}/100`;
     }
 
-    // Сброс анимации звезд
+    // Сброс и подготовка объемных золотых звезд
     const s1 = this.modalElement.querySelector('#winStar1') as HTMLElement;
     const s2 = this.modalElement.querySelector('#winStar2') as HTMLElement;
     const s3 = this.modalElement.querySelector('#winStar3') as HTMLElement;
 
     if (s1 && s2 && s3) {
-      s1.style.transform = 'scale(0)';
-      s2.style.transform = 'scale(0)';
-      s3.style.transform = 'scale(0)';
-      s1.textContent = result.stars >= 1 ? '⭐' : '🖤';
-      s2.textContent = result.stars >= 2 ? '⭐' : '🖤';
-      s3.textContent = result.stars >= 3 ? '⭐' : '🖤';
+      s1.style.opacity = '0';
+      s1.style.transform = 'translateY(6px) rotate(-6deg) scale(0)';
+      s2.style.opacity = '0';
+      s2.style.transform = 'translateY(-4px) rotate(0deg) scale(0)';
+      s3.style.opacity = '0';
+      s3.style.transform = 'translateY(6px) rotate(6deg) scale(0)';
+
+      s1.innerHTML = result.stars >= 1 ? renderGoldenStar(46) : renderEmptyStar(46);
+      s2.innerHTML = result.stars >= 2 ? renderGoldenStar(58) : renderEmptyStar(58);
+      s3.innerHTML = result.stars >= 3 ? renderGoldenStar(46) : renderEmptyStar(46);
     }
 
     this.screenManager.openModal(this.modalId);
 
-    // Поочередное выпадение звезд
+    // Поочередное выпадение звезд с эластичным отскоком и 100% яркостью
     setTimeout(() => {
       if (s1) {
-        s1.style.transform = 'scale(1)';
-        this.callbacks.onStarPop?.(0);
+        s1.style.opacity = '1';
+        s1.style.transform = 'translateY(6px) rotate(-6deg) scale(1)';
+        if (result.stars >= 1) this.callbacks.onStarPop?.(0);
       }
-    }, 200);
+    }, 220);
 
     setTimeout(() => {
       if (s2) {
-        s2.style.transform = 'scale(1)';
+        s2.style.opacity = '1';
+        s2.style.transform = 'translateY(-4px) rotate(0deg) scale(1)';
         if (result.stars >= 2) this.callbacks.onStarPop?.(1);
       }
-    }, 450);
+    }, 480);
 
     setTimeout(() => {
       if (s3) {
-        s3.style.transform = 'scale(1)';
+        s3.style.opacity = '1';
+        s3.style.transform = 'translateY(6px) rotate(6deg) scale(1)';
         if (result.stars >= 3) this.callbacks.onStarPop?.(2);
       }
-    }, 700);
+    }, 740);
   }
 
   public close(): void {
