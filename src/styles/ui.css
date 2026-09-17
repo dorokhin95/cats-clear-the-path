@@ -129,9 +129,11 @@
   z-index: 15;
 }
 
-/* Скрытие Canvas */
+/* Скрытие Canvas без выпадения из геометрического потока */
 .canvas-layer.hidden {
-  display: none !important;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 /* Навигация по главам в LevelSelect */

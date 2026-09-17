@@ -55,6 +55,10 @@ async function initApp(): Promise<void> {
   const setGameplayVisible = (visible: boolean) => {
     if (visible) {
       canvasLayer?.classList.remove('hidden');
+      renderer.handleResize();
+      requestAnimationFrame(() => {
+        renderer.handleResize();
+      });
     } else {
       game.pause();
       canvasLayer?.classList.add('hidden');
@@ -119,6 +123,7 @@ async function initApp(): Promise<void> {
 
   // 8. Функция загрузки уровня
   const loadGameLevel = (levelId: number) => {
+    renderer.handleResize();
     currentLevelId = levelId;
     const selectedSkin = playerProgress.getSelectedCat();
     const loaded = LevelLoader.loadBoard(levelId, selectedSkin);

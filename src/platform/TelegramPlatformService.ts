@@ -70,6 +70,19 @@ export class TelegramPlatformService implements PlatformService {
       try {
         this.tg.ready();
         this.tg.expand();
+
+        // Подписка на изменение вьюпорта шторки Telegram (expand, collapse, safe area)
+        if (typeof this.tg.onEvent === 'function') {
+          this.tg.onEvent('viewportChanged', () => {
+            window.dispatchEvent(new Event('resize'));
+          });
+        }
+
+        // Даём время анимации раскрытия шторки на iOS для надёжной синхронизации
+        setTimeout(() => {
+          window.dispatchEvent(new Event('resize'));
+        }, 300);
+
         if (typeof this.tg.disableVerticalSwipes === 'function') {
           this.tg.disableVerticalSwipes();
           console.log('[TelegramPlatformService] Вертикальные свайпы успешно отключены.');
